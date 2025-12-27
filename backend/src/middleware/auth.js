@@ -1,0 +1,18 @@
+// src/middleware/auth.js
+import admin from '../config/firebase.js';
+
+export const verifyFirebaseToken = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split('Bearer ')[1];
+
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+
+        const decodedToken = await admin.auth().verifyIdToken(token);
+        req.user = { uid: decodedToken.uid };
+        next();
+    } catch (error) {
+        return res.status(401).json({ error: 'Invalid token' });
+    }
+};
