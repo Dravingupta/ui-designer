@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getProjects, saveProject, deleteProject } from '../utils/projectStorage';
+import api from '../utils/api';
 import { motion } from 'framer-motion';
 import { Plus, Layout, Trash2, Edit3, LogOut, Clock, Layers } from 'lucide-react';
 
@@ -11,26 +11,40 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await api.get('/projects');
+        setProjects(response.data);
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+      }
+    };
     if (user) {
-      setProjects(getProjects(user.id));
+      fetchProjects();
     }
   }, [user]);
 
-  const handleCreateProject = () => {
-    const newProject = {
-      name: 'New Project',
-      userId: user.id,
-      theme: 'light',
-      layout: []
-    };
-    const saved = saveProject(newProject);
-    navigate(`/editor/${saved.id}`);
+  const handleCreateProject = async () => {
+    try {
+      const response = await api.post('/projects', {
+        name: 'New Project',
+        theme: 'light',
+        layout: []
+      });
+      navigate(`/editor/${response.data._id}`);
+    } catch (error) {
+      console.error('Failed to create project:', error);
+    }
   };
 
-  const handleDelete = (e, id) => {
+  const handleDelete = async (e, id) => {
     e.stopPropagation();
-    deleteProject(id);
-    setProjects(getProjects(user.id));
+    try {
+      await api.delete(`/projects/${id}`);
+      setProjects(prev => prev.filter(p => p._id !== id));
+    } catch (error) {
+      console.error('Failed to delete project:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -48,7 +62,7 @@ const Dashboard = () => {
         </div>
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-sm font-medium">{user.name}</span>
+            <span className="text-sm font-medium">{user.displayName || user.email}</span>
             <span className="text-xs text-slate-500">{user.email}</span>
           </div>
           <button 
@@ -100,11 +114,11 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
             {projects.map((project, idx) => (
               <motion.div
-                key={project.id}
+                key={project._id}
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.05 }}
-                onClick={() => navigate(`/editor/${project.id}`)}
+                onClick={() => navigate(`/editor/${project._id}`)}
                 className="group bg-slate-900 border border-white/5 rounded-3xl p-6 hover:border-indigo-500/50 hover:bg-slate-800/50 transition-all cursor-pointer relative overflow-hidden"
               >
                 {/* Visual Hint */}
@@ -115,7 +129,7 @@ const Dashboard = () => {
                     <Layers className="w-6 h-6 text-slate-400 group-hover:text-indigo-400" />
                   </div>
                   <button 
-                    onClick={(e) => handleDelete(e, project.id)}
+                    onClick={(e) => handleDelete(e, project._id)}
                     className="p-2 opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-slate-500 hover:text-red-500 rounded-xl transition-all"
                   >
                     <Trash2 className="w-5 h-5" />

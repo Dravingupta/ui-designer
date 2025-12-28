@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getProject, saveProject } from '../utils/projectStorage';
+import api from '../utils/api';
 import CanvaEditor from '../components/CanvaEditor';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,19 +12,34 @@ const EditorPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const data = getProject(id);
-    if (!data || data.userId !== user.id) {
-      navigate('/dashboard');
-      return;
+    const fetchProject = async () => {
+      try {
+        const response = await api.get(`/projects/${id}`);
+        setProject(response.data);
+      } catch (error) {
+        console.error('Failed to fetch project:', error);
+        navigate('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) {
+      fetchProject();
     }
-    setProject(data);
-    setLoading(false);
   }, [id, user, navigate]);
 
-  const handleSave = (updatedData) => {
-    const updatedProject = { ...project, ...updatedData };
-    saveProject(updatedProject);
-    setProject(updatedProject);
+  const handleSave = async (updatedData) => {
+    try {
+      const updatedProject = { ...project, ...updatedData };
+      await api.put(`/projects/${id}`, {
+        name: updatedProject.name,
+        layout: updatedProject.layout,
+        theme: updatedProject.theme
+      });
+      setProject(updatedProject);
+    } catch (error) {
+      console.error('Failed to save project:', error);
+    }
   };
 
   if (loading) return null;
