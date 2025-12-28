@@ -1,4 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  updateProfile
+} from 'firebase/auth';
+import { auth } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -7,43 +15,39 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('ui_designer_user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
   }, []);
 
-  const login = (email, password) => {
-    // Mock login logic
-    const users = JSON.parse(localStorage.getItem('ui_designer_users') || '[]');
-    const foundUser = users.find(u => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      setUser(foundUser);
-      localStorage.setItem('ui_designer_user', JSON.stringify(foundUser));
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return { success: true, user: userCredential.user };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+      return { success: true, user: userCredential.user };
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await signOut(auth);
       return { success: true };
+    } catch (error) {
+      return { success: false, message: error.message };
     }
-    return { success: false, message: 'Invalid credentials' };
-  };
-
-  const register = (name, email, password) => {
-    const users = JSON.parse(localStorage.getItem('ui_designer_users') || '[]');
-    if (users.find(u => u.email === email)) {
-      return { success: false, message: 'Email already exists' };
-    }
-    
-    const newUser = { id: Date.now(), name, email, password };
-    users.push(newUser);
-    localStorage.setItem('ui_designer_users', JSON.stringify(users));
-    setUser(newUser);
-    localStorage.setItem('ui_designer_user', JSON.stringify(newUser));
-    return { success: true };
-  };
-
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('ui_designer_user');
   };
 
   return (
