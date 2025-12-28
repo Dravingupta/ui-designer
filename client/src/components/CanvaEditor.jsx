@@ -115,27 +115,37 @@ function CanvaEditor({ initialData, onSave, onBack }) {
   };
 
   const getDefaultData = (type) => {
-    const defaults = {
-      navbar: { logo: 'DESIGNER', links: ['Home', 'Features', 'Pricing'], align: 'right', sticky: false },
-      hero: { heading: 'Design something amazing', subheading: 'Your vision, powered by AI components.', button: 'Get Started', align: 'center', minHeight: 'auto' },
-      richtext: { heading: 'Our Story', body: 'Start telling your story here. This component supports multiple lines of text and custom headings.', align: 'left', width: 'normal' },
-      text: { content: 'This is a text block.', fontSize: 'base', width: 'normal', align: 'left' },
-      image: { height: 300, caption: 'Beautiful Image', fullWidth: false },
-      cards: { count: 3, titles: Array(3).fill('Card Title'), descriptions: Array(3).fill('Card description text goes here.'), imageUrls: Array(3).fill('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'), layout: 'grid' },
-      testimonials: { items: [{ name: 'Alex Rivera', role: 'Founder', quote: 'This builder is game changing!', imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=100&h=100&q=80' }] },
-      pricing: { plans: [{ name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false }, { name: 'Pro', price: '$29', features: ['All Features', 'Support'], highlighted: true }] },
-      contact: { heading: 'Contact Us', email: 'hi@example.com', phone: '+1 234 567 890', address: '123 Studio St' },
-      logogrid: { logos: Array(4).fill('https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'), columns: 4 },
-      video: { heading: 'Product Demo', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-      buttons: { buttons: [{ label: 'Action 1' }, { label: 'Action 2' }], align: 'center' },
-      features: { items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
-      stats: { stats: [{ label: 'Users', value: '1M+' }], layout: 'horizontal' },
-      cta: { heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', align: 'center' },
-      faq: { items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
-      divider: { height: 'md', showLine: true },
-      footer: { text: '© 2025 UI Designer. All rights reserved.', columns: 1, align: 'center' }
+    const common = {
+      py: 'py-24',
+      px: 'px-12',
+      radius: 'rounded-none',
+      shadow: 'shadow-none',
+      customBg: '',
+      customText: '',
+      maxWidth: 'max-w-6xl'
     };
-    return defaults[type] || {};
+
+    const defaults = {
+      navbar: { ...common, logo: 'DESIGNER', links: ['Home', 'Features', 'Pricing'], align: 'right', sticky: false, py: 'py-8' },
+      hero: { ...common, heading: 'Design something amazing', subheading: 'Your vision, powered by AI components.', button: 'Get Started', align: 'center', py: 'py-40' },
+      richtext: { ...common, heading: 'Our Story', body: 'Start telling your story here. This component supports multiple lines of text and custom headings.', align: 'left' },
+      text: { ...common, content: 'This is a text block.', fontSize: 'base', align: 'left', py: 'py-8' },
+      image: { ...common, url: '', height: 400, caption: 'Beautiful Image', fullWidth: false },
+      cards: { ...common, count: 3, titles: Array(3).fill('Card Title'), descriptions: Array(3).fill('Card description text goes here.'), imageUrls: Array(3).fill('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80') },
+      testimonials: { ...common, items: [{ name: 'Alex Rivera', role: 'Founder', quote: 'This builder is game changing!', imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=100&h=100&q=80' }] },
+      pricing: { ...common, plans: [{ name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false }, { name: 'Pro', price: '$29', features: ['All Features', 'Support'], highlighted: true }] },
+      contact: { ...common, heading: 'Contact Us', email: 'hi@example.com', phone: '+1 234 567 890', address: '123 Studio St' },
+      logogrid: { ...common, logos: Array(4).fill('https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'), columns: 4 },
+      video: { ...common, heading: 'Product Demo', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
+      buttons: { ...common, buttons: [{ label: 'Action 1' }, { label: 'Action 2' }], align: 'center', py: 'py-12' },
+      features: { ...common, items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
+      stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], layout: 'horizontal', py: 'py-16' },
+      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', align: 'center' },
+      faq: { ...common, items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
+      divider: { ...common, height: 'md', showLine: true, py: 'py-0' },
+      footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', align: 'center', py: 'py-12' }
+    };
+    return defaults[type] || { ...common };
   };
 
   const removeElement = (id) => {
@@ -407,6 +417,62 @@ function CanvaEditor({ initialData, onSave, onBack }) {
 }
 
 // Helper Components
+function EditableText({ value, onChange, className, type = 'input' }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value);
+
+  useEffect(() => {
+    setTempValue(value);
+  }, [value]);
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (tempValue !== value) onChange(tempValue);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && type === 'input') {
+      handleBlur();
+    }
+    if (e.key === 'Escape') {
+      setTempValue(value);
+      setIsEditing(false);
+    }
+  };
+
+  if (isEditing) {
+    return type === 'textarea' ? (
+      <textarea
+        autoFocus
+        value={tempValue}
+        onChange={(e) => setTempValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className={`bg-indigo-500/10 outline-none ring-2 ring-indigo-500 rounded px-1 w-full resize-none ${className}`}
+        rows={Math.max(2, tempValue.split('\n').length)}
+      />
+    ) : (
+      <input
+        autoFocus
+        value={tempValue}
+        onChange={(e) => setTempValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className={`bg-indigo-500/10 outline-none ring-2 ring-indigo-500 rounded px-1 w-full ${className}`}
+      />
+    );
+  }
+
+  return (
+    <div 
+      onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
+      className={`hover:ring-1 hover:ring-indigo-500/30 rounded cursor-text transition-all ${className}`}
+    >
+      {value || <span className="opacity-20 italic">Empty text...</span>}
+    </div>
+  );
+}
+
 function ElementButton({ onClick, label, icon }) {
   return (
     <button
@@ -445,16 +511,36 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode }) 
         </div>
       )}
 
-      <SectionRenderer type={element.type} data={element.data} theme={theme} />
+      <SectionRenderer 
+        type={element.type} 
+        data={element.data} 
+        theme={theme} 
+        onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
+        isSelected={isSelected && !previewMode}
+      />
     </div>
   );
 }
 
-function SectionRenderer({ type, data, theme }) {
+const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
     richtext: RichTextSection,
+    text: TextSection,
+    image: ImageSection,
+    cards: CardsSection,
+    testimonials: TestimonialsSection,
+    pricing: PricingSection,
+    contact: ContactSection,
+    logogrid: LogoGridSection,
+    video: VideoSection,
+    buttons: ButtonsSection,
+    features: FeaturesSection,
+    stats: StatsSection,
+    cta: CTASection,
+    faq: FAQSection,
+    divider: DividerSection,
     footer: FooterSection,
   };
 
@@ -465,12 +551,43 @@ function SectionRenderer({ type, data, theme }) {
     </div>
   ));
   
-  return <Component data={data} theme={theme} type={type} />;
+  const customStyle = {
+    backgroundColor: data.customBg || undefined,
+    color: data.customText || undefined,
+  };
+
+  const animations = {
+    none: { initial: { opacity: 1 }, animate: { opacity: 1 } },
+    fadeUp: { initial: { opacity: 0, y: 40 }, animate: { opacity: 1, y: 0 } },
+    fadeDown: { initial: { opacity: 0, y: -40 }, animate: { opacity: 1, y: 0 } },
+    fadeIn: { initial: { opacity: 0 }, animate: { opacity: 1 } },
+    scaleUp: { initial: { opacity: 0, scale: 0.8 }, animate: { opacity: 1, scale: 1 } },
+    slideLeft: { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 } },
+    slideRight: { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
+  };
+
+  const anim = animations[data.animation] || animations.none;
+  
+  return (
+    <motion.div 
+      initial={anim.initial}
+      whileInView={anim.animate}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      style={customStyle} 
+      className={`${data.py} ${data.px}`}
+    >
+      <div className={`${data.maxWidth} mx-auto ${data.radius} ${data.shadow}`}>
+        <Component data={data} theme={theme} type={type} onUpdate={onUpdate} isSelected={isSelected} />
+      </div>
+    </motion.div>
+  );
 }
 
 // Inspector Form Blocks
 function Inspector({ section, onUpdate, onRemove }) {
   const { type, data } = section;
+  const [activeTab, setActiveTab] = useState('content');
   
   return (
     <div className="space-y-8 pb-32">
@@ -479,40 +596,311 @@ function Inspector({ section, onUpdate, onRemove }) {
         <p className="text-xs font-bold text-white uppercase">{type}</p>
       </div>
 
-      {type === 'hero' && (
+      <div className="flex gap-1 p-1 bg-black/20 rounded-xl mb-6">
+        <button 
+          onClick={() => setActiveTab('content')}
+          className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
+        >
+          Content
+        </button>
+        <button 
+          onClick={() => setActiveTab('design')}
+          className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'design' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
+        >
+          Design
+        </button>
+      </div>
+
+      {activeTab === 'content' ? (
         <div className="space-y-6">
-          <ControlGroup label="Copy">
+          {type === 'hero' && (
+            <>
+              <ControlGroup label="Copy">
+                <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+                <Textarea label="Supporting Text" value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} />
+                <Input label="Primary Button" value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
+              </ControlGroup>
+              <ControlGroup label="Positioning">
+                <Select label="Text Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center']} />
+              </ControlGroup>
+            </>
+          )}
+
+          {type === 'navbar' && (
+            <>
+              <ControlGroup label="Identity">
+                <Input label="Brand Logo" value={data.logo} onChange={(v) => onUpdate({ ...data, logo: v })} />
+              </ControlGroup>
+              <ControlGroup label="Navigation">
+                 <Textarea label="Links (comma separated)" value={data.links.join(', ')} onChange={(v) => onUpdate({...data, links: v.split(',').map(s => s.trim())})} />
+              </ControlGroup>
+            </>
+          )}
+
+          {type === 'richtext' && (
+            <ControlGroup label="Article">
+              <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+              <Textarea label="Content Body" value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} rows={10} />
+            </ControlGroup>
+          )}
+
+          {type === 'text' && (
+            <ControlGroup label="Text Content">
+              <Textarea label="Content" value={data.content} onChange={(v) => onUpdate({ ...data, content: v })} />
+              <Select label="Font Size" value={data.fontSize} onChange={(v) => onUpdate({ ...data, fontSize: v })} options={['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl']} />
+              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
+            </ControlGroup>
+          )}
+
+          {type === 'image' && (
+            <ControlGroup label="Media">
+              <Input label="Image URL" value={data.url} onChange={(v) => onUpdate({ ...data, url: v })} />
+              <Input label="Caption" value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
+              <Input label="Height (px)" value={data.height} onChange={(v) => onUpdate({ ...data, height: parseInt(v) || 0 })} />
+              <div className="flex items-center gap-3 px-1 py-1">
+                 <input type="checkbox" checked={data.fullWidth} onChange={(e) => onUpdate({ ...data, fullWidth: e.target.checked })} className="w-4 h-4 rounded border-white/10 bg-zinc-950" />
+                 <span className="text-[10px] font-bold text-zinc-400 uppercase">Full Width Container</span>
+              </div>
+            </ControlGroup>
+          )}
+
+          {type === 'cards' && (
+            <>
+              <ControlGroup label="Grid Config">
+                <Input label="Number of Cards" value={data.count} onChange={(v) => {
+                  const count = Math.max(1, parseInt(v) || 1);
+                  onUpdate({
+                    ...data,
+                    count,
+                    titles: Array(count).fill('').map((_, i) => data.titles[i] || `Title ${i+1}`),
+                    descriptions: Array(count).fill('').map((_, i) => data.descriptions[i] || `Description ${i+1}`),
+                    imageUrls: Array(count).fill('').map((_, i) => data.imageUrls[i] || 'https://via.placeholder.com/400x300')
+                  });
+                }} />
+              </ControlGroup>
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
+                {data.titles.map((title, i) => (
+                  <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase">Card {i+1}</p>
+                    <Input label="Image URL" value={data.imageUrls[i]} onChange={(v) => {
+                      const newImgs = [...data.imageUrls];
+                      newImgs[i] = v;
+                      onUpdate({ ...data, imageUrls: newImgs });
+                    }} />
+                    <Input label="Title" value={title} onChange={(v) => {
+                      const newTitles = [...data.titles];
+                      newTitles[i] = v;
+                      onUpdate({ ...data, titles: newTitles });
+                    }} />
+                    <Textarea label="Description" value={data.descriptions[i]} onChange={(v) => {
+                      const newDesc = [...data.descriptions];
+                      newDesc[i] = v;
+                      onUpdate({ ...data, descriptions: newDesc });
+                    }} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {type === 'cta' && (
+            <ControlGroup label="Call to Action">
+              <Input label="Heading" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+              <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => onUpdate({ ...data, supportingText: v })} />
+              <Input label="Button Label" value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
+              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
+            </ControlGroup>
+          )}
+
+          {type === 'footer' && (
+            <ControlGroup label="Footer Content">
+              <Input label="Copyright Text" value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} />
+              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
+            </ControlGroup>
+          )}
+
+          {/* Fallback for other types or implement them similarly */}
+          {!['hero', 'navbar', 'richtext', 'text', 'image', 'cards', 'cta', 'footer'].includes(type) && (
+             <div className="p-4 bg-white/5 rounded-2xl italic text-[10px] text-zinc-500 text-center">
+               Add more custom controls for {type} here...
+             </div>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-6">
+          <ControlGroup label="Layout & Spacing">
+            <Select 
+              label="Vertical Padding" 
+              value={data.py} 
+              onChange={(v) => onUpdate({ ...data, py: v })} 
+              options={['py-0', 'py-4', 'py-8', 'py-12', 'py-20', 'py-32', 'py-40', 'py-60']} 
+            />
+            <Select 
+              label="Horizontal Padding" 
+              value={data.px} 
+              onChange={(v) => onUpdate({ ...data, px: v })} 
+              options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']} 
+            />
+            <Select 
+              label="Max Width" 
+              value={data.maxWidth} 
+              onChange={(v) => onUpdate({ ...data, maxWidth: v })} 
+              options={['max-w-4xl', 'max-w-5xl', 'max-w-6xl', 'max-w-7xl', 'max-w-full']} 
+            />
+          </ControlGroup>
+
+          <ControlGroup label="Styling">
+            <Select 
+              label="Border Radius" 
+              value={data.radius} 
+              onChange={(v) => onUpdate({ ...data, radius: v })} 
+              options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-[40px]', 'rounded-full']} 
+            />
+            <Select 
+              label="Shadow" 
+              value={data.shadow} 
+              onChange={(v) => onUpdate({ ...data, shadow: v })} 
+              options={['shadow-none', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl']} 
+            />
+            <Select 
+              label="Entrance Animation" 
+              value={data.animation || 'none'} 
+              onChange={(v) => onUpdate({ ...data, animation: v })} 
+              options={['none', 'fadeUp', 'fadeDown', 'fadeIn', 'scaleUp', 'slideLeft', 'slideRight']} 
+            />
+          </ControlGroup>
+
+          <ControlGroup label="Custom Colors">
+             <Input label="Background Color (CSS)" value={data.customBg} onChange={(v) => onUpdate({ ...data, customBg: v })} placeholder="#ffffff or rgba(0,0,0,0.5)" />
+             <Input label="Text Color (CSS)" value={data.customText} onChange={(v) => onUpdate({ ...data, customText: v })} placeholder="#000000" />
+          </ControlGroup>
+        </div>
+      )}
+
+      {type === 'pricing' && (
+        <div className="space-y-6">
+          {data.plans.map((plan, i) => (
+            <ControlGroup key={i} label={`Plan ${i + 1}`}>
+              <Input label="Name" value={plan.name} onChange={(v) => {
+                const newPlans = [...data.plans];
+                newPlans[i] = { ...plan, name: v };
+                onUpdate({ ...data, plans: newPlans });
+              }} />
+              <Input label="Price" value={plan.price} onChange={(v) => {
+                const newPlans = [...data.plans];
+                newPlans[i] = { ...plan, price: v };
+                onUpdate({ ...data, plans: newPlans });
+              }} />
+            </ControlGroup>
+          ))}
+        </div>
+      )}
+
+      {type === 'features' && (
+        <div className="space-y-6">
+          <ControlGroup label="Grid Config">
+            <Input label="Columns" value={data.columns} onChange={(v) => onUpdate({ ...data, columns: parseInt(v) || 3 })} />
+          </ControlGroup>
+          {data.items.map((item, i) => (
+            <ControlGroup key={i} label={`Feature ${i + 1}`}>
+              <Input label="Title" value={item.title} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i] = { ...item, title: v };
+                onUpdate({ ...data, items: newItems });
+              }} />
+              <Input label="Description" value={item.description} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i] = { ...item, description: v };
+                onUpdate({ ...data, items: newItems });
+              }} />
+            </ControlGroup>
+          ))}
+          <button onClick={() => onUpdate({ ...data, items: [...data.items, { title: 'New Feature', description: 'Desc' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add Feature</button>
+        </div>
+      )}
+
+      {type === 'stats' && (
+        <div className="space-y-6">
+           {data.stats.map((stat, i) => (
+            <ControlGroup key={i} label={`Stat ${i + 1}`}>
+              <Input label="Label" value={stat.label} onChange={(v) => {
+                const newStats = [...data.stats];
+                newStats[i] = { ...stat, label: v };
+                onUpdate({ ...data, stats: newStats });
+              }} />
+              <Input label="Value" value={stat.value} onChange={(v) => {
+                const newStats = [...data.stats];
+                newStats[i] = { ...stat, value: v };
+                onUpdate({ ...data, stats: newStats });
+              }} />
+            </ControlGroup>
+          ))}
+          <button onClick={() => onUpdate({ ...data, stats: [...data.stats, { label: 'Metric', value: '100%' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add Stat</button>
+        </div>
+      )}
+
+      {type === 'contact' && (
+        <div className="space-y-6">
+          <ControlGroup label="Header">
+            <Input label="Heading" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+          </ControlGroup>
+          <ControlGroup label="Contact Info">
+            <Input label="Email" value={data.email} onChange={(v) => onUpdate({ ...data, email: v })} />
+            <Input label="Phone" value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
+            <Input label="Address" value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
+          </ControlGroup>
+        </div>
+      )}
+
+      {type === 'faq' && (
+        <div className="space-y-6">
+          {data.items.map((item, i) => (
+            <ControlGroup key={i} label={`FAQ ${i + 1}`}>
+              <Input label="Question" value={item.question} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i] = { ...item, question: v };
+                onUpdate({ ...data, items: newItems });
+              }} />
+              <Textarea label="Answer" value={item.answer} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i] = { ...item, answer: v };
+                onUpdate({ ...data, items: newItems });
+              }} />
+            </ControlGroup>
+          ))}
+          <button onClick={() => onUpdate({ ...data, items: [...data.items, { question: 'New Question', answer: 'Answer' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add FAQ</button>
+        </div>
+      )}
+
+      {type === 'video' && (
+        <div className="space-y-6">
+          <ControlGroup label="Heading">
             <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-            <Textarea label="Supporting Text" value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} />
-            <Input label="Primary Button" value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
           </ControlGroup>
-          <ControlGroup label="Positioning">
-            <Select label="Text Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center']} />
+          <ControlGroup label="Source">
+            <Input label="Embed URL" value={data.videoUrl} onChange={(v) => onUpdate({ ...data, videoUrl: v })} />
           </ControlGroup>
         </div>
       )}
 
-      {type === 'navbar' && (
+      {type === 'logogrid' && (
         <div className="space-y-6">
-          <ControlGroup label="Identity">
-            <Input label="Brand Logo" value={data.logo} onChange={(v) => onUpdate({ ...data, logo: v })} />
+          <ControlGroup label="Layout">
+            <Input label="Columns" value={data.columns} onChange={(v) => onUpdate({ ...data, columns: parseInt(v) || 4 })} />
           </ControlGroup>
-          <ControlGroup label="Navigation">
-             <Textarea label="Links (comma separated)" value={data.links.join(', ')} onChange={(v) => onUpdate({...data, links: v.split(',').map(s => s.trim())})} />
-          </ControlGroup>
-        </div>
-      )}
-
-      {type === 'richtext' && (
-        <div className="space-y-6">
-          <ControlGroup label="Article">
-            <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-            <Textarea label="Content Body" value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} rows={10} />
+          <ControlGroup label="Logos">
+            {data.logos.map((logo, i) => (
+              <Input key={i} label={`Logo ${i + 1} URL`} value={logo} onChange={(v) => {
+                const newLogos = [...data.logos];
+                newLogos[i] = v;
+                onUpdate({ ...data, logos: newLogos });
+              }} />
+            ))}
           </ControlGroup>
         </div>
       )}
 
-      {!['hero', 'navbar', 'richtext'].includes(type) && (
+      {!['hero', 'navbar', 'richtext', 'text', 'image', 'cards', 'testimonials', 'pricing', 'contact', 'logogrid', 'video', 'buttons', 'features', 'stats', 'cta', 'faq', 'divider', 'footer'].includes(type) && (
         <div className="p-6 bg-white/2 border border-white/5 rounded-2xl italic text-[10px] text-zinc-500">
           Complex controls for {type} are currently being mapped...
         </div>
@@ -585,54 +973,379 @@ function Select({ label, value, onChange, options }) {
 }
 
 // Render Components
-function NavbarSection({ data, theme }) {
+function NavbarSection({ data, theme, onUpdate }) {
   return (
-    <div className={`px-12 py-8 flex items-center justify-between border-b ${theme.border}`}>
-      <div className={`text-2xl font-black tracking-tighter ${theme.text}`}>{data.logo}</div>
+    <div className={`flex items-center justify-between`}>
+      <EditableText 
+        value={data.logo} 
+        onChange={(v) => onUpdate({ ...data, logo: v })} 
+        className={`text-2xl font-black tracking-tighter ${theme.text}`} 
+      />
       <div className="flex gap-10">
         {data.links?.map((link, idx) => (
-          <span key={idx} className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`}>{link}</span>
+          <EditableText 
+            key={idx}
+            value={link} 
+            onChange={(v) => {
+              const newLinks = [...data.links];
+              newLinks[idx] = v;
+              onUpdate({ ...data, links: newLinks });
+            }}
+            className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`} 
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function HeroSection({ data, theme }) {
+function HeroSection({ data, theme, onUpdate }) {
   return (
-    <div className={`py-40 px-12 ${data.align === 'center' ? 'text-center' : 'text-left'}`}>
+    <div className={`${data.align === 'center' ? 'text-center' : 'text-left'}`}>
       <motion.h1 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${data.align === 'center' ? 'mx-auto' : ''} ${theme.text}`}
       >
-        {data.heading}
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
       </motion.h1>
-      <p className={`text-2xl mb-12 max-w-3xl ${data.align === 'center' ? 'mx-auto' : ''} leading-relaxed opacity-60 font-medium ${theme.text}`}>
-        {data.subheading}
-      </p>
+      <div className={`text-2xl mb-12 max-w-3xl ${data.align === 'center' ? 'mx-auto' : ''} leading-relaxed opacity-60 font-medium ${theme.text}`}>
+        <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" />
+      </div>
       <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
-        {data.button}
+        <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
       </button>
     </div>
   );
 }
 
-function RichTextSection({ data, theme }) {
+function RichTextSection({ data, theme, onUpdate }) {
   return (
-    <div className="py-24 px-12">
-      <div className={`max-w-4xl ${data.align === 'center' ? 'mx-auto text-center' : ''}`}>
-        <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>{data.heading}</h2>
-        <div className={`text-xl leading-loose opacity-70 ${theme.text} whitespace-pre-line font-medium`}>{data.body}</div>
+    <div className={`${data.align === 'center' ? 'text-center' : ''}`}>
+      <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+      </h2>
+      <div className={`text-xl leading-loose opacity-70 ${theme.text} whitespace-pre-line font-medium`}>
+        <EditableText value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} type="textarea" />
       </div>
     </div>
   );
 }
 
-function FooterSection({ data, theme }) {
+function TextSection({ data, theme, onUpdate }) {
+  const sizeMap = {
+    xs: 'text-xs', sm: 'text-sm', base: 'text-base', lg: 'text-lg', xl: 'text-xl', '2xl': 'text-2xl', '3xl': 'text-3xl'
+  };
   return (
-    <div className={`py-12 px-12 border-t text-center ${theme.border} opacity-50`}>
-      <p className={`text-xs font-bold uppercase tracking-widest ${theme.text}`}>{data.text}</p>
+    <div className={`${data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left'}`}>
+      <div className={`${sizeMap[data.fontSize] || 'text-base'} ${theme.text} opacity-80 leading-relaxed`}>
+        <EditableText value={data.content} onChange={(v) => onUpdate({ ...data, content: v })} type="textarea" />
+      </div>
+    </div>
+  );
+}
+
+function ImageSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`${data.fullWidth ? 'w-full' : 'w-full mx-auto'}`}>
+       <img src={data.url || 'https://via.placeholder.com/800x400'} alt={data.caption} className="w-full rounded-2xl shadow-xl object-cover" style={{ height: data.height || 400 }} />
+       {data.caption && (
+         <div className={`mt-4 text-xs font-bold uppercase tracking-widest opacity-40 text-center ${theme.text}`}>
+           <EditableText value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
+         </div>
+       )}
+    </div>
+  );
+}
+
+function CardsSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`grid gap-8 ${data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+      {Array(data.count).fill(0).map((_, i) => (
+        <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02]`}>
+          <div className="h-48 mb-6 overflow-hidden rounded-2xl">
+            <img src={data.imageUrls[i]} alt={data.titles[i]} className="w-full h-full object-cover" />
+          </div>
+          <h3 className={`text-xl font-bold mb-4 ${theme.text}`}>
+            <EditableText value={data.titles[i]} onChange={(v) => {
+              const newTitles = [...data.titles];
+              newTitles[i] = v;
+              onUpdate({ ...data, titles: newTitles });
+            }} />
+          </h3>
+          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
+            <EditableText value={data.descriptions[i]} onChange={(v) => {
+              const newDesc = [...data.descriptions];
+              newDesc[i] = v;
+              onUpdate({ ...data, descriptions: newDesc });
+            }} type="textarea" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TestimonialsSection({ data, theme, onUpdate }) {
+  return (
+    <div className="grid gap-12 max-w-5xl mx-auto">
+      {data.items.map((item, i) => (
+        <div key={i} className="text-center">
+          <img src={item.imageUrl} className="w-20 h-20 rounded-full mx-auto mb-6 border-2 border-indigo-500 p-1" alt={item.name} />
+          <div className={`text-2xl font-medium italic mb-8 ${theme.text}`}>
+            <EditableText value={item.quote} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].quote = v;
+              onUpdate({ ...data, items: newItems });
+            }} type="textarea" />
+          </div>
+          <h4 className={`text-sm font-bold uppercase tracking-widest ${theme.text}`}>
+            <EditableText value={item.name} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].name = v;
+              onUpdate({ ...data, items: newItems });
+            }} />
+          </h4>
+          <div className={`text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1 ${theme.text}`}>
+            <EditableText value={item.role} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].role = v;
+              onUpdate({ ...data, items: newItems });
+            }} />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PricingSection({ data, theme, onUpdate }) {
+  return (
+    <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
+      {data.plans.map((plan, i) => (
+        <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary}`}>
+          <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text}`}>
+             <EditableText value={plan.name} onChange={(v) => {
+               const newPlans = [...data.plans];
+               newPlans[i].name = v;
+               onUpdate({ ...data, plans: newPlans });
+             }} />
+          </div>
+          <div className={`text-5xl font-black mb-8 ${theme.text}`}>
+            <EditableText value={plan.price} onChange={(v) => {
+              const newPlans = [...data.plans];
+              newPlans[i].price = v;
+              onUpdate({ ...data, plans: newPlans });
+            }} />
+          </div>
+          <ul className="space-y-4 mb-10">
+            {plan.features.map((f, idx) => (
+              <li key={idx} className={`text-sm font-bold opacity-60 flex items-center gap-3 ${theme.text}`}>
+                <Check className="w-4 h-4 text-indigo-500" />
+                <EditableText value={f} onChange={(v) => {
+                  const newPlans = [...data.plans];
+                  newPlans[i].features[idx] = v;
+                  onUpdate({ ...data, plans: newPlans });
+                }} />
+              </li>
+            ))}
+          </ul>
+          <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>Get Started</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ContactSection({ data, theme, onUpdate }) {
+  return (
+    <div className="max-w-4xl mx-auto text-center">
+      <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+      </h2>
+      <div className="grid grid-cols-3 gap-12">
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Email</p>
+          <div className={`text-sm font-bold ${theme.text}`}>
+            <EditableText value={data.email} onChange={(v) => onUpdate({ ...data, email: v })} />
+          </div>
+        </div>
+        <div className="space-y-2">
+           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Phone</p>
+           <div className={`text-sm font-bold ${theme.text}`}>
+             <EditableText value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
+           </div>
+        </div>
+        <div className="space-y-2">
+           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Address</p>
+           <div className={`text-sm font-bold ${theme.text}`}>
+             <EditableText value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LogoGridSection({ data, theme, onUpdate }) {
+  const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4', 5: 'grid-cols-5', 6: 'grid-cols-6' };
+  return (
+    <div className={`grid ${colMap[data.columns] || 'grid-cols-4'} gap-12 items-center`}>
+      {data.logos.map((logo, i) => (
+        <div key={i} className="relative group/logo">
+           <img src={logo} className="w-full opacity-40 grayscale group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all cursor-pointer" alt="Client Logo" />
+           {onUpdate && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 rounded-lg pointer-events-none">
+                <span className="text-[8px] font-bold text-white uppercase">Replace in Sidebar</span>
+              </div>
+           )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function VideoSection({ data, theme, onUpdate }) {
+  return (
+    <div className="max-w-5xl mx-auto">
+      <h2 className={`text-4xl font-black mb-12 tracking-tight text-center ${theme.text}`}>
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+      </h2>
+      <div className="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+        <iframe className="w-full h-full" src={data.videoUrl} title="Video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+      </div>
+    </div>
+  );
+}
+
+function ButtonsSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`flex gap-6 ${data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+      {data.buttons.map((btn, i) => (
+        <button key={i} className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+          <EditableText value={btn.label} onChange={(v) => {
+            const newBtns = [...data.buttons];
+            newBtns[i].label = v;
+            onUpdate({ ...data, buttons: newBtns });
+          }} />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function FeaturesSection({ data, theme, onUpdate }) {
+  const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' };
+  return (
+    <div className={`grid ${colMap[data.columns] || 'grid-cols-3'} gap-16`}>
+      {data.items.map((item, i) => (
+        <div key={i} className="space-y-4">
+          <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500">
+             <span className="font-black text-xl">{i+1}</span>
+          </div>
+          <h3 className={`text-xl font-bold ${theme.text}`}>
+            <EditableText value={item.title} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].title = v;
+              onUpdate({ ...data, items: newItems });
+            }} />
+          </h3>
+          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
+            <EditableText value={item.description} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].description = v;
+              onUpdate({ ...data, items: newItems });
+            }} type="textarea" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatsSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`flex ${data.layout === 'horizontal' ? 'flex-row justify-around' : 'flex-col gap-12 items-center'} flex-wrap gap-8`}>
+       {data.stats.map((stat, i) => (
+         <div key={i} className="text-center">
+           <div className={`text-6xl font-black mb-2 tracking-tighter ${theme.text}`}>
+             <EditableText value={stat.value} onChange={(v) => {
+               const newStats = [...data.stats];
+               newStats[i].value = v;
+               onUpdate({ ...data, stats: newStats });
+             }} />
+           </div>
+           <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+             <EditableText value={stat.label} onChange={(v) => {
+               const newStats = [...data.stats];
+               newStats[i].label = v;
+               onUpdate({ ...data, stats: newStats });
+             }} />
+           </div>
+         </div>
+       ))}
+    </div>
+  );
+}
+
+function CTASection({ data, theme, onUpdate }) {
+  return (
+    <div className={`${data.align === 'center' ? 'text-center' : 'text-left'}`}>
+      <div className={`max-w-5xl ${data.align === 'center' ? 'mx-auto' : ''} p-16 rounded-[40px] bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20`}>
+        <h2 className="text-6xl font-black mb-6 tracking-tighter">
+          <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+        </h2>
+        <div className="text-xl opacity-80 mb-10 max-w-2xl mx-auto">
+          <EditableText value={data.supportingText} onChange={(v) => onUpdate({ ...data, supportingText: v })} type="textarea" />
+        </div>
+        <button className="px-12 py-5 bg-white text-indigo-600 text-sm font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl">
+          <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FAQSection({ data, theme, onUpdate }) {
+  return (
+    <div className="max-w-3xl mx-auto space-y-4">
+      {data.items.map((item, i) => (
+        <div key={i} className={`p-8 rounded-2xl border ${theme.border} ${theme.secondary}`}>
+          <h4 className={`text-lg font-bold mb-4 ${theme.text}`}>
+            <EditableText value={item.question} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].question = v;
+              onUpdate({ ...data, items: newItems });
+            }} />
+          </h4>
+          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
+            <EditableText value={item.answer} onChange={(v) => {
+              const newItems = [...data.items];
+              newItems[i].answer = v;
+              onUpdate({ ...data, items: newItems });
+            }} type="textarea" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DividerSection({ data, theme }) {
+    const heightMap = { sm: 'h-8', md: 'h-16', lg: 'h-32' };
+    return (
+      <div className={`${heightMap[data.height] || 'h-16'} flex items-center justify-center`}>
+        {data.showLine && <div className={`w-full h-px ${theme.border} opacity-20`}></div>}
+      </div>
+    );
+}
+
+function FooterSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`text-center opacity-50`}>
+      <div className={`text-xs font-bold uppercase tracking-widest ${theme.text}`}>
+        <EditableText value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} />
+      </div>
     </div>
   );
 }
