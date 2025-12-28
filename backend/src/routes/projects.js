@@ -8,17 +8,45 @@ const router = express.Router();
 // Create project
 router.post('/', verifyFirebaseToken, async (req, res, next) => {
     try {
-        const { name, layout, theme } = req.body;
+        const { name, layout, theme, isPublic } = req.body;
 
         const project = await Project.create({
             userId: req.user.uid,
             name,
             layout,
             theme: theme || 'light',
-            isPublic: false
+            isPublic: isPublic || false
         });
 
         res.status(201).json(project);
+    } catch (error) {
+        next(error);
+    }
+});
+
+// Clone project (from template or own project)
+router.post('/:id/clone', verifyFirebaseToken, async (req, res, next) => {
+    try {
+        const sourceProject = await Project.findById(req.params.id);
+
+        if (!sourceProject) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        // Allow cloning if public OR if user owns it
+        if (!sourceProject.isPublic && sourceProject.userId !== req.user.uid) {
+            return res.status(403).json({ error: 'Access denied' });
+        }
+
+        const newProject = await Project.create({
+            userId: req.user.uid,
+            name: `${sourceProject.name} (Copy)`,
+            layout: sourceProject.layout,
+            theme: sourceProject.theme,
+            isPublic: false // Clones are always private by default
+        });
+
+        res.status(201).json(newProject);
     } catch (error) {
         next(error);
     }
