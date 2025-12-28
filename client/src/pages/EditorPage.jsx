@@ -45,10 +45,11 @@ const EditorPage = () => {
   if (loading) return null;
 
   return (
-    <CanvaEditor 
-      initialData={project} 
-      onSave={handleSave} 
-      onBack={() => navigate('/dashboard')} 
+    <CanvaEditor
+      initialData={project}
+      projectId={id}
+      onSave={handleSave}
+      onBack={() => navigate('/dashboard')}
     />
   );
 };

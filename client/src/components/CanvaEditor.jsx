@@ -15,9 +15,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Share2, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, Key, X, Check } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { exportToZip } from '../utils/exportUtil';
+import api from '../utils/api';
 
 // Theme definitions
 const themes = {
@@ -51,7 +51,7 @@ const themeGroups = {
   Soft: ['lavender', 'mint']
 };
 
-function CanvaEditor({ initialData, onSave, onBack }) {
+function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const [state, setState] = useState({
     name: initialData?.name || 'Untitled Design',
     selectedSectionId: null,
@@ -61,8 +61,6 @@ function CanvaEditor({ initialData, onSave, onBack }) {
   const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [showKeyModal, setShowKeyModal] = useState(false);
-  const [apiKey, setApiKey] = useState(localStorage.getItem('GEMINI_API_KEY') || '');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -82,23 +80,33 @@ function CanvaEditor({ initialData, onSave, onBack }) {
   };
 
   const handleExport = async () => {
-    if (!localStorage.getItem('GEMINI_API_KEY')) {
-      setShowKeyModal(true);
-      return;
-    }
     setIsExporting(true);
     try {
-      await exportToZip(state.name, state.layout, currentTheme);
+      const response = await api.post(`/generate/${projectId}`);
+
+      // Convert base64 to blob
+      const binaryString = window.atob(response.data.data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], { type: 'application/zip' });
+
+      // Download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = response.data.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err) {
-      alert("Export failed: " + err.message);
+      console.error("Export failed:", err);
+      alert("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
     }
-  };
-
-  const saveApiKey = () => {
-    localStorage.setItem('GEMINI_API_KEY', apiKey);
-    setShowKeyModal(false);
   };
 
   const addElement = (type) => {
@@ -166,7 +174,7 @@ function CanvaEditor({ initialData, onSave, onBack }) {
   };
 
   const selectSection = (id) => {
-    if(!previewMode) setState(prev => ({ ...prev, selectedSectionId: id }));
+    if (!previewMode) setState(prev => ({ ...prev, selectedSectionId: id }));
   };
 
   const setTheme = (theme) => {
@@ -196,15 +204,15 @@ function CanvaEditor({ initialData, onSave, onBack }) {
       {!previewMode && (
         <header className="bg-zinc-900/50 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between z-50">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={onBack}
               className="p-2 hover:bg-white/5 rounded-xl text-zinc-400 hover:text-white transition-all"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="h-6 w-px bg-white/10"></div>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={state.name}
               onChange={(e) => setState(prev => ({ ...prev, name: e.target.value }))}
               className="bg-transparent font-semibold focus:outline-none hover:bg-white/5 px-2 py-1 rounded transition-all w-48 text-sm"
@@ -213,15 +221,9 @@ function CanvaEditor({ initialData, onSave, onBack }) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => setShowKeyModal(true)}
-              className="p-2 hover:bg-white/5 rounded-xl text-zinc-400 hover:text-white transition-all"
-              title="API Settings"
-            >
-              <Key className="w-4 h-4" />
-            </button>
+
             <div className="h-6 w-px bg-white/10 mr-2"></div>
-            <button 
+            <button
               onClick={handleSave}
               disabled={isSaving}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${isSaving ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 hover:bg-white/10'}`}
@@ -229,14 +231,14 @@ function CanvaEditor({ initialData, onSave, onBack }) {
               <Save className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
               {isSaving ? 'Saving...' : 'Save'}
             </button>
-            <button 
+            <button
               onClick={() => setPreviewMode(true)}
               className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-semibold transition-all"
             >
               <Eye className="w-4 h-4" />
               Preview
             </button>
-            <button 
+            <button
               onClick={handleExport}
               disabled={isExporting}
               className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-95 ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -251,13 +253,13 @@ function CanvaEditor({ initialData, onSave, onBack }) {
       {/* Preview Exit Overlay */}
       <AnimatePresence>
         {previewMode && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             className="fixed top-6 right-6 z-[100]"
           >
-            <button 
+            <button
               onClick={() => setPreviewMode(false)}
               className="flex items-center gap-3 px-6 py-3 bg-zinc-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl hover:bg-zinc-800 transition-all text-sm font-bold text-white group"
             >
@@ -270,38 +272,7 @@ function CanvaEditor({ initialData, onSave, onBack }) {
 
       {/* API Key Modal */}
       <AnimatePresence>
-        {showKeyModal && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-            <motion.div 
-               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-               onClick={() => setShowKeyModal(false)}
-               className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-            />
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-               className="relative w-full max-w-md bg-zinc-900 border border-white/10 p-8 rounded-3xl shadow-2xl"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold flex items-center gap-3">
-                  <Key className="w-5 h-5 text-indigo-500" />
-                  API Settings
-                </h2>
-                <button onClick={() => setShowKeyModal(false)} className="p-2 hover:bg-white/5 rounded-full"><X className="w-5 h-5" /></button>
-              </div>
-              <p className="text-sm text-zinc-400 mb-6 font-medium">To export your code, please provide a Gemini API key. Your key is stored only in your browser locally.</p>
-              <div className="space-y-4">
-                <Input label="Google Gemini API Key" value={apiKey} onChange={setApiKey} placeholder="Paste your key here..." />
-                <button 
-                  onClick={saveApiKey}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-2xl transition-all flex items-center justify-center gap-2 underline-none"
-                >
-                  <Check className="w-4 h-4" />
-                  Save Credentials
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
+
       </AnimatePresence>
 
       <div className={`flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}>
@@ -319,7 +290,7 @@ function CanvaEditor({ initialData, onSave, onBack }) {
                 <ElementButton onClick={() => addElement('footer')} label="Footer" icon={<Trash2 className="w-4 h-4" />} />
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-white/5 flex-1">
               <h2 className="text-[10px] font-bold mb-4 uppercase tracking-[0.2em] text-zinc-500">Theme Palette</h2>
               <div className="flex flex-wrap gap-2">
@@ -343,7 +314,7 @@ function CanvaEditor({ initialData, onSave, onBack }) {
             {state.layout.length === 0 ? (
               <div className={`flex items-center justify-center h-[70vh] ${currentTheme.muted}`}>
                 <div className="text-center">
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     className="w-20 h-20 bg-white/5 rounded-3xl mx-auto flex items-center justify-center mb-6"
@@ -378,7 +349,7 @@ function CanvaEditor({ initialData, onSave, onBack }) {
           <aside className="w-80 bg-zinc-900 border-l border-white/5 overflow-y-auto hidden xl:flex flex-col sticky top-0 h-screen">
             <div className="p-6">
               <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-8">Properties</h2>
-              
+
               {selectedSection ? (
                 <Inspector
                   section={selectedSection}
@@ -464,7 +435,7 @@ function EditableText({ value, onChange, className, type = 'input' }) {
   }
 
   return (
-    <div 
+    <div
       onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
       className={`hover:ring-1 hover:ring-indigo-500/30 rounded cursor-text transition-all ${className}`}
     >
@@ -503,7 +474,7 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode }) 
       onClick={(e) => { e.stopPropagation(); onSelect(); }}
     >
       {!previewMode && (
-        <div 
+        <div
           {...attributes} {...listeners}
           className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-zinc-900 border border-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-50 shadow-xl"
         >
@@ -511,10 +482,10 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode }) 
         </div>
       )}
 
-      <SectionRenderer 
-        type={element.type} 
-        data={element.data} 
-        theme={theme} 
+      <SectionRenderer
+        type={element.type}
+        data={element.data}
+        theme={theme}
         onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
         isSelected={isSelected && !previewMode}
       />
@@ -544,13 +515,13 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
     footer: FooterSection,
   };
 
-  const Component = components[type] || (({type, theme}) => (
+  const Component = components[type] || (({ type, theme }) => (
     <div className={`py-16 px-12 text-center border-y border-dashed ${theme.border} opacity-50`}>
       <p className={`text-sm font-bold uppercase tracking-widest ${theme.text}`}>Previewing: {type}</p>
       <p className="text-xs mt-2 opacity-50">Configuration active in sidebar</p>
     </div>
   ));
-  
+
   const customStyle = {
     backgroundColor: data.customBg || undefined,
     color: data.customText || undefined,
@@ -567,14 +538,14 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
   };
 
   const anim = animations[data.animation] || animations.none;
-  
+
   return (
-    <motion.div 
+    <motion.div
       initial={anim.initial}
       whileInView={anim.animate}
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      style={customStyle} 
+      style={customStyle}
       className={`${data.py} ${data.px}`}
     >
       <div className={`${data.maxWidth} mx-auto ${data.radius} ${data.shadow}`}>
@@ -588,22 +559,22 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
 function Inspector({ section, onUpdate, onRemove }) {
   const { type, data } = section;
   const [activeTab, setActiveTab] = useState('content');
-  
+
   return (
     <div className="space-y-8 pb-32">
-       <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl mb-4">
+      <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl mb-4">
         <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Active Object</p>
         <p className="text-xs font-bold text-white uppercase">{type}</p>
       </div>
 
       <div className="flex gap-1 p-1 bg-black/20 rounded-xl mb-6">
-        <button 
+        <button
           onClick={() => setActiveTab('content')}
           className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
         >
           Content
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('design')}
           className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'design' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
         >
@@ -632,7 +603,7 @@ function Inspector({ section, onUpdate, onRemove }) {
                 <Input label="Brand Logo" value={data.logo} onChange={(v) => onUpdate({ ...data, logo: v })} />
               </ControlGroup>
               <ControlGroup label="Navigation">
-                 <Textarea label="Links (comma separated)" value={data.links.join(', ')} onChange={(v) => onUpdate({...data, links: v.split(',').map(s => s.trim())})} />
+                <Textarea label="Links (comma separated)" value={data.links.join(', ')} onChange={(v) => onUpdate({ ...data, links: v.split(',').map(s => s.trim()) })} />
               </ControlGroup>
             </>
           )}
@@ -658,8 +629,8 @@ function Inspector({ section, onUpdate, onRemove }) {
               <Input label="Caption" value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
               <Input label="Height (px)" value={data.height} onChange={(v) => onUpdate({ ...data, height: parseInt(v) || 0 })} />
               <div className="flex items-center gap-3 px-1 py-1">
-                 <input type="checkbox" checked={data.fullWidth} onChange={(e) => onUpdate({ ...data, fullWidth: e.target.checked })} className="w-4 h-4 rounded border-white/10 bg-zinc-950" />
-                 <span className="text-[10px] font-bold text-zinc-400 uppercase">Full Width Container</span>
+                <input type="checkbox" checked={data.fullWidth} onChange={(e) => onUpdate({ ...data, fullWidth: e.target.checked })} className="w-4 h-4 rounded border-white/10 bg-zinc-950" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase">Full Width Container</span>
               </div>
             </ControlGroup>
           )}
@@ -672,8 +643,8 @@ function Inspector({ section, onUpdate, onRemove }) {
                   onUpdate({
                     ...data,
                     count,
-                    titles: Array(count).fill('').map((_, i) => data.titles[i] || `Title ${i+1}`),
-                    descriptions: Array(count).fill('').map((_, i) => data.descriptions[i] || `Description ${i+1}`),
+                    titles: Array(count).fill('').map((_, i) => data.titles[i] || `Title ${i + 1}`),
+                    descriptions: Array(count).fill('').map((_, i) => data.descriptions[i] || `Description ${i + 1}`),
                     imageUrls: Array(count).fill('').map((_, i) => data.imageUrls[i] || 'https://via.placeholder.com/400x300')
                   });
                 }} />
@@ -681,7 +652,7 @@ function Inspector({ section, onUpdate, onRemove }) {
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
                 {data.titles.map((title, i) => (
                   <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase">Card {i+1}</p>
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase">Card {i + 1}</p>
                     <Input label="Image URL" value={data.imageUrls[i]} onChange={(v) => {
                       const newImgs = [...data.imageUrls];
                       newImgs[i] = v;
@@ -721,58 +692,58 @@ function Inspector({ section, onUpdate, onRemove }) {
 
           {/* Fallback for other types or implement them similarly */}
           {!['hero', 'navbar', 'richtext', 'text', 'image', 'cards', 'cta', 'footer'].includes(type) && (
-             <div className="p-4 bg-white/5 rounded-2xl italic text-[10px] text-zinc-500 text-center">
-               Add more custom controls for {type} here...
-             </div>
+            <div className="p-4 bg-white/5 rounded-2xl italic text-[10px] text-zinc-500 text-center">
+              Add more custom controls for {type} here...
+            </div>
           )}
         </div>
       ) : (
         <div className="space-y-6">
           <ControlGroup label="Layout & Spacing">
-            <Select 
-              label="Vertical Padding" 
-              value={data.py} 
-              onChange={(v) => onUpdate({ ...data, py: v })} 
-              options={['py-0', 'py-4', 'py-8', 'py-12', 'py-20', 'py-32', 'py-40', 'py-60']} 
+            <Select
+              label="Vertical Padding"
+              value={data.py}
+              onChange={(v) => onUpdate({ ...data, py: v })}
+              options={['py-0', 'py-4', 'py-8', 'py-12', 'py-20', 'py-32', 'py-40', 'py-60']}
             />
-            <Select 
-              label="Horizontal Padding" 
-              value={data.px} 
-              onChange={(v) => onUpdate({ ...data, px: v })} 
-              options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']} 
+            <Select
+              label="Horizontal Padding"
+              value={data.px}
+              onChange={(v) => onUpdate({ ...data, px: v })}
+              options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']}
             />
-            <Select 
-              label="Max Width" 
-              value={data.maxWidth} 
-              onChange={(v) => onUpdate({ ...data, maxWidth: v })} 
-              options={['max-w-4xl', 'max-w-5xl', 'max-w-6xl', 'max-w-7xl', 'max-w-full']} 
+            <Select
+              label="Max Width"
+              value={data.maxWidth}
+              onChange={(v) => onUpdate({ ...data, maxWidth: v })}
+              options={['max-w-4xl', 'max-w-5xl', 'max-w-6xl', 'max-w-7xl', 'max-w-full']}
             />
           </ControlGroup>
 
           <ControlGroup label="Styling">
-            <Select 
-              label="Border Radius" 
-              value={data.radius} 
-              onChange={(v) => onUpdate({ ...data, radius: v })} 
-              options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-[40px]', 'rounded-full']} 
+            <Select
+              label="Border Radius"
+              value={data.radius}
+              onChange={(v) => onUpdate({ ...data, radius: v })}
+              options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-[40px]', 'rounded-full']}
             />
-            <Select 
-              label="Shadow" 
-              value={data.shadow} 
-              onChange={(v) => onUpdate({ ...data, shadow: v })} 
-              options={['shadow-none', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl']} 
+            <Select
+              label="Shadow"
+              value={data.shadow}
+              onChange={(v) => onUpdate({ ...data, shadow: v })}
+              options={['shadow-none', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl']}
             />
-            <Select 
-              label="Entrance Animation" 
-              value={data.animation || 'none'} 
-              onChange={(v) => onUpdate({ ...data, animation: v })} 
-              options={['none', 'fadeUp', 'fadeDown', 'fadeIn', 'scaleUp', 'slideLeft', 'slideRight']} 
+            <Select
+              label="Entrance Animation"
+              value={data.animation || 'none'}
+              onChange={(v) => onUpdate({ ...data, animation: v })}
+              options={['none', 'fadeUp', 'fadeDown', 'fadeIn', 'scaleUp', 'slideLeft', 'slideRight']}
             />
           </ControlGroup>
 
           <ControlGroup label="Custom Colors">
-             <Input label="Background Color (CSS)" value={data.customBg} onChange={(v) => onUpdate({ ...data, customBg: v })} placeholder="#ffffff or rgba(0,0,0,0.5)" />
-             <Input label="Text Color (CSS)" value={data.customText} onChange={(v) => onUpdate({ ...data, customText: v })} placeholder="#000000" />
+            <Input label="Background Color (CSS)" value={data.customBg} onChange={(v) => onUpdate({ ...data, customBg: v })} placeholder="#ffffff or rgba(0,0,0,0.5)" />
+            <Input label="Text Color (CSS)" value={data.customText} onChange={(v) => onUpdate({ ...data, customText: v })} placeholder="#000000" />
           </ControlGroup>
         </div>
       )}
@@ -821,7 +792,7 @@ function Inspector({ section, onUpdate, onRemove }) {
 
       {type === 'stats' && (
         <div className="space-y-6">
-           {data.stats.map((stat, i) => (
+          {data.stats.map((stat, i) => (
             <ControlGroup key={i} label={`Stat ${i + 1}`}>
               <Input label="Label" value={stat.label} onChange={(v) => {
                 const newStats = [...data.stats];
@@ -932,9 +903,9 @@ function Input({ label, value, onChange, placeholder }) {
   return (
     <div className="space-y-2">
       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
-      <input 
-        type="text" 
-        value={value} 
+      <input
+        type="text"
+        value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white placeholder:text-zinc-700 font-medium"
@@ -947,8 +918,8 @@ function Textarea({ label, value, onChange, rows = 3 }) {
   return (
     <div className="space-y-2">
       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
-      <textarea 
-        value={value} 
+      <textarea
+        value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
         className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white resize-none scrollbar-hide font-medium"
@@ -961,8 +932,8 @@ function Select({ label, value, onChange, options }) {
   return (
     <div className="space-y-2">
       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
-      <select 
-        value={value} 
+      <select
+        value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white cursor-pointer"
       >
@@ -976,22 +947,22 @@ function Select({ label, value, onChange, options }) {
 function NavbarSection({ data, theme, onUpdate }) {
   return (
     <div className={`flex items-center justify-between`}>
-      <EditableText 
-        value={data.logo} 
-        onChange={(v) => onUpdate({ ...data, logo: v })} 
-        className={`text-2xl font-black tracking-tighter ${theme.text}`} 
+      <EditableText
+        value={data.logo}
+        onChange={(v) => onUpdate({ ...data, logo: v })}
+        className={`text-2xl font-black tracking-tighter ${theme.text}`}
       />
       <div className="flex gap-10">
         {data.links?.map((link, idx) => (
-          <EditableText 
+          <EditableText
             key={idx}
-            value={link} 
+            value={link}
             onChange={(v) => {
               const newLinks = [...data.links];
               newLinks[idx] = v;
               onUpdate({ ...data, links: newLinks });
             }}
-            className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`} 
+            className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`}
           />
         ))}
       </div>
@@ -1002,7 +973,7 @@ function NavbarSection({ data, theme, onUpdate }) {
 function HeroSection({ data, theme, onUpdate }) {
   return (
     <div className={`${data.align === 'center' ? 'text-center' : 'text-left'}`}>
-      <motion.h1 
+      <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${data.align === 'center' ? 'mx-auto' : ''} ${theme.text}`}
@@ -1048,12 +1019,12 @@ function TextSection({ data, theme, onUpdate }) {
 function ImageSection({ data, theme, onUpdate }) {
   return (
     <div className={`${data.fullWidth ? 'w-full' : 'w-full mx-auto'}`}>
-       <img src={data.url || 'https://via.placeholder.com/800x400'} alt={data.caption} className="w-full rounded-2xl shadow-xl object-cover" style={{ height: data.height || 400 }} />
-       {data.caption && (
-         <div className={`mt-4 text-xs font-bold uppercase tracking-widest opacity-40 text-center ${theme.text}`}>
-           <EditableText value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
-         </div>
-       )}
+      <img src={data.url || 'https://via.placeholder.com/800x400'} alt={data.caption} className="w-full rounded-2xl shadow-xl object-cover" style={{ height: data.height || 400 }} />
+      {data.caption && (
+        <div className={`mt-4 text-xs font-bold uppercase tracking-widest opacity-40 text-center ${theme.text}`}>
+          <EditableText value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
+        </div>
+      )}
     </div>
   );
 }
@@ -1125,11 +1096,11 @@ function PricingSection({ data, theme, onUpdate }) {
       {data.plans.map((plan, i) => (
         <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary}`}>
           <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text}`}>
-             <EditableText value={plan.name} onChange={(v) => {
-               const newPlans = [...data.plans];
-               newPlans[i].name = v;
-               onUpdate({ ...data, plans: newPlans });
-             }} />
+            <EditableText value={plan.name} onChange={(v) => {
+              const newPlans = [...data.plans];
+              newPlans[i].name = v;
+              onUpdate({ ...data, plans: newPlans });
+            }} />
           </div>
           <div className={`text-5xl font-black mb-8 ${theme.text}`}>
             <EditableText value={plan.price} onChange={(v) => {
@@ -1171,16 +1142,16 @@ function ContactSection({ data, theme, onUpdate }) {
           </div>
         </div>
         <div className="space-y-2">
-           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Phone</p>
-           <div className={`text-sm font-bold ${theme.text}`}>
-             <EditableText value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
-           </div>
+          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Phone</p>
+          <div className={`text-sm font-bold ${theme.text}`}>
+            <EditableText value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
+          </div>
         </div>
         <div className="space-y-2">
-           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Address</p>
-           <div className={`text-sm font-bold ${theme.text}`}>
-             <EditableText value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
-           </div>
+          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Address</p>
+          <div className={`text-sm font-bold ${theme.text}`}>
+            <EditableText value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
+          </div>
         </div>
       </div>
     </div>
@@ -1193,12 +1164,12 @@ function LogoGridSection({ data, theme, onUpdate }) {
     <div className={`grid ${colMap[data.columns] || 'grid-cols-4'} gap-12 items-center`}>
       {data.logos.map((logo, i) => (
         <div key={i} className="relative group/logo">
-           <img src={logo} className="w-full opacity-40 grayscale group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all cursor-pointer" alt="Client Logo" />
-           {onUpdate && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 rounded-lg pointer-events-none">
-                <span className="text-[8px] font-bold text-white uppercase">Replace in Sidebar</span>
-              </div>
-           )}
+          <img src={logo} className="w-full opacity-40 grayscale group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all cursor-pointer" alt="Client Logo" />
+          {onUpdate && (
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 rounded-lg pointer-events-none">
+              <span className="text-[8px] font-bold text-white uppercase">Replace in Sidebar</span>
+            </div>
+          )}
         </div>
       ))}
     </div>
@@ -1241,7 +1212,7 @@ function FeaturesSection({ data, theme, onUpdate }) {
       {data.items.map((item, i) => (
         <div key={i} className="space-y-4">
           <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500">
-             <span className="font-black text-xl">{i+1}</span>
+            <span className="font-black text-xl">{i + 1}</span>
           </div>
           <h3 className={`text-xl font-bold ${theme.text}`}>
             <EditableText value={item.title} onChange={(v) => {
@@ -1266,24 +1237,24 @@ function FeaturesSection({ data, theme, onUpdate }) {
 function StatsSection({ data, theme, onUpdate }) {
   return (
     <div className={`flex ${data.layout === 'horizontal' ? 'flex-row justify-around' : 'flex-col gap-12 items-center'} flex-wrap gap-8`}>
-       {data.stats.map((stat, i) => (
-         <div key={i} className="text-center">
-           <div className={`text-6xl font-black mb-2 tracking-tighter ${theme.text}`}>
-             <EditableText value={stat.value} onChange={(v) => {
-               const newStats = [...data.stats];
-               newStats[i].value = v;
-               onUpdate({ ...data, stats: newStats });
-             }} />
-           </div>
-           <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-             <EditableText value={stat.label} onChange={(v) => {
-               const newStats = [...data.stats];
-               newStats[i].label = v;
-               onUpdate({ ...data, stats: newStats });
-             }} />
-           </div>
-         </div>
-       ))}
+      {data.stats.map((stat, i) => (
+        <div key={i} className="text-center">
+          <div className={`text-6xl font-black mb-2 tracking-tighter ${theme.text}`}>
+            <EditableText value={stat.value} onChange={(v) => {
+              const newStats = [...data.stats];
+              newStats[i].value = v;
+              onUpdate({ ...data, stats: newStats });
+            }} />
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
+            <EditableText value={stat.label} onChange={(v) => {
+              const newStats = [...data.stats];
+              newStats[i].label = v;
+              onUpdate({ ...data, stats: newStats });
+            }} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -1332,12 +1303,12 @@ function FAQSection({ data, theme, onUpdate }) {
 }
 
 function DividerSection({ data, theme }) {
-    const heightMap = { sm: 'h-8', md: 'h-16', lg: 'h-32' };
-    return (
-      <div className={`${heightMap[data.height] || 'h-16'} flex items-center justify-center`}>
-        {data.showLine && <div className={`w-full h-px ${theme.border} opacity-20`}></div>}
-      </div>
-    );
+  const heightMap = { sm: 'h-8', md: 'h-16', lg: 'h-32' };
+  return (
+    <div className={`${heightMap[data.height] || 'h-16'} flex items-center justify-center`}>
+      {data.showLine && <div className={`w-full h-px ${theme.border} opacity-20`}></div>}
+    </div>
+  );
 }
 
 function FooterSection({ data, theme, onUpdate }) {
