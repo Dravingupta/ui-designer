@@ -1,6 +1,7 @@
+// src/config/firebase.js
 import admin from 'firebase-admin';
 
-const initializeFirebase = () => {
+export const initializeFirebase = () => {
     try {
         if (admin.apps.length) {
             console.log('Firebase Admin already initialized');
@@ -14,9 +15,6 @@ const initializeFirebase = () => {
             });
         } else {
             console.log('Checking Firebase environment variables...');
-            console.log('FIREBASE_PROJECT_ID exists:', !!process.env.FIREBASE_PROJECT_ID);
-            console.log('FIREBASE_CLIENT_EMAIL exists:', !!process.env.FIREBASE_CLIENT_EMAIL);
-            console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
 
             const projectId = process.env.FIREBASE_PROJECT_ID;
             const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
@@ -41,5 +39,4 @@ const initializeFirebase = () => {
     }
 };
 
-initializeFirebase();
 export default admin;
