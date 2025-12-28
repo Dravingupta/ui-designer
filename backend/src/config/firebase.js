@@ -1,22 +1,40 @@
-// src/config/firebase.js
 import admin from 'firebase-admin';
 
 const initializeFirebase = () => {
     try {
+        if (admin.apps.length) {
+            console.log('Firebase Admin already initialized');
+            return;
+        }
+
         if (process.env.FIREBASE_SERVICE_ACCOUNT) {
             const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
             admin.initializeApp({
                 credential: admin.credential.cert(serviceAccount)
             });
         } else {
+            console.log('Checking Firebase environment variables...');
+            console.log('FIREBASE_PROJECT_ID exists:', !!process.env.FIREBASE_PROJECT_ID);
+            console.log('FIREBASE_CLIENT_EMAIL exists:', !!process.env.FIREBASE_CLIENT_EMAIL);
+            console.log('FIREBASE_PRIVATE_KEY exists:', !!process.env.FIREBASE_PRIVATE_KEY);
+
+            const projectId = process.env.FIREBASE_PROJECT_ID;
+            const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+            const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+            if (!projectId?.trim()) throw new Error('FIREBASE_PROJECT_ID missing');
+            if (!clientEmail?.trim()) throw new Error('FIREBASE_CLIENT_EMAIL missing');
+            if (!privateKey?.trim()) throw new Error('FIREBASE_PRIVATE_KEY missing');
+
             admin.initializeApp({
                 credential: admin.credential.cert({
-                    projectId: process.env.FIREBASE_PROJECT_ID,
-                    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                    project_id: projectId,
+                    private_key: privateKey,
+                    client_email: clientEmail,
                 })
             });
         }
+
         console.log('Firebase Admin initialized successfully');
     } catch (error) {
         console.error('Firebase Admin initialization error:', error.message);
@@ -24,5 +42,4 @@ const initializeFirebase = () => {
 };
 
 initializeFirebase();
-
 export default admin;

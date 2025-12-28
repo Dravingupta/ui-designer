@@ -1,13 +1,11 @@
 // src/app.js
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import projectRoutes from './routes/projects.js';
 import templateRoutes from './routes/templates.js';
 import generateRoutes from './routes/generate.js';
 import { errorHandler } from './utils/errorHandler.js';
-
-dotenv.config();
+import "./config/firebase.js";
 
 const app = express();
 
