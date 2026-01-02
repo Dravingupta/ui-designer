@@ -15,9 +15,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check , DollarSign , Mail , MessageSquare , HelpCircle,Grid , BarChart3 , Megaphone , ImageIcon} from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
+import { useRef } from 'react'; // Added useRef explicitly if not present
 // IMPORT NEW COMPONENTS 
 
 
@@ -43,6 +44,35 @@ const themes = {
   mint: { bg: 'bg-emerald-50', text: 'text-emerald-950', border: 'border-emerald-200', accent: 'bg-emerald-600 text-white hover:bg-emerald-700', secondary: 'bg-emerald-100', muted: 'text-emerald-700' }
 };
 
+const elementCategories = {
+  Layout: [
+    { type: 'navbar', label: 'Navbar', icon: Layout, desc: 'Top navigation bar' },
+    { type: 'footer', label: 'Footer', icon: Trash2, desc: 'Bottom footer area' },
+    { type: 'divider', label: 'Divider', icon: Minus, desc: 'Section separator' },
+  ],
+  Content: [
+    { type: 'hero', label: 'Hero', icon: Layers, desc: 'Main landing section' },
+    { type: 'richtext', label: 'Rich Text', icon: Edit3, desc: 'Advanced text block' },
+    { type: 'features', label: 'Features', icon: Grid, desc: 'Feature highlights' },
+    { type: 'faq', label: 'FAQ', icon: HelpCircle, desc: 'Questions & Answers' },
+    { type: 'timeline', label: 'Timeline', icon: Clock, desc: 'Chronological steps' },
+    { type: 'stats', label: 'Stats', icon: BarChart3, desc: 'Numerical statistics' },
+    { type: 'testimonials', label: 'Testimonials', icon: MessageSquare, desc: 'Customer reviews' },
+  ],
+  Media: [
+    { type: 'image', label: 'Image', icon: ImageIcon, desc: 'Photos and illustrations' },
+    { type: 'video', label: 'Video', icon: Video, desc: 'Embedded video player' },
+    { type: 'cards', label: 'Cards', icon: Layout, desc: 'Grid of info cards' },
+    { type: 'logogrid', label: 'Logo Grid', icon: Grid, desc: 'Partner logos' },
+  ],
+  Marketing: [
+    { type: 'cta', label: 'Call to Action', icon: Plus, desc: 'Conversion block' },
+    { type: 'pricing', label: 'Pricing', icon: DollarSign, desc: 'Price tables' },
+    { type: 'contact', label: 'Contact', icon: Mail, desc: 'Contact forms' },
+    { type: 'buttons', label: 'Buttons', icon: MousePointer, desc: 'Action buttons' },
+  ]
+};
+
 const themeGroups = {
   Minimal: ['light', 'dark', 'gray'],
   Startup: ['blue', 'indigo', 'purple'],
@@ -58,12 +88,22 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     name: initialData?.name || 'Untitled Design',
     selectedSectionId: null,
     theme: initialData?.theme || 'light',
+    theme: initialData?.theme || 'light',
     layout: initialData?.layout || []
   });
+  const [activeTab, setActiveTab] = useState('components');
+  const [activeSection, setActiveSection] = useState('Content');
+  const [searchQuery, setSearchQuery] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
+  // Zoom State
+  const [zoom, setZoom] = useState(1);
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.5));
+
+  // Element Actions
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -124,26 +164,26 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   //   }));
   // };
   const addElement = (type) => {
-  console.log("🟢 ADD ELEMENT CLICKED:", type);
+    console.log("🟢 ADD ELEMENT CLICKED:", type);
 
-  const newElement = {
-    id: `${type}-${Date.now()}`,
-    type,
-    data: getDefaultData(type),
-  };
-
-  console.log("🟢 NEW ELEMENT OBJECT:", newElement);
-
-  setState(prev => {
-    const next = {
-      ...prev,
-      layout: [...prev.layout, newElement],
-      selectedSectionId: newElement.id,
+    const newElement = {
+      id: `${type}-${Date.now()}`,
+      type,
+      data: getDefaultData(type),
     };
-    console.log("🟢 NEW LAYOUT:", next.layout);
-    return next;
-  });
-};
+
+    console.log("🟢 NEW ELEMENT OBJECT:", newElement);
+
+    setState(prev => {
+      const next = {
+        ...prev,
+        layout: [...prev.layout, newElement],
+        selectedSectionId: newElement.id,
+      };
+      console.log("🟢 NEW LAYOUT:", next.layout);
+      return next;
+    });
+  };
 
 
   const getDefaultData = (type) => {
@@ -158,7 +198,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     };
 
     const defaults = {
-      navbar: { ...common, logo: 'DESIGNER', links: ['Home', 'Features', 'Pricing'], align: 'right', sticky: false, py: 'py-8' },
+      navbar: { ...common, logo: 'DESIGNER', links: ['Home', 'Features', 'Pricing'], sticky: false, py: 'py-8' },
       hero: { ...common, heading: 'Design something amazing', subheading: 'Your vision, powered by AI components.', button: 'Get Started', align: 'center', py: 'py-40' },
       richtext: { ...common, heading: 'Our Story', body: 'Start telling your story here. This component supports multiple lines of text and custom headings.', align: 'left' },
       text: { ...common, content: 'This is a text block.', fontSize: 'base', align: 'left', py: 'py-8' },
@@ -172,12 +212,12 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       buttons: { ...common, buttons: [{ label: 'Action 1' }, { label: 'Action 2' }], align: 'center', py: 'py-12' },
       features: { ...common, items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
       stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], layout: 'horizontal', py: 'py-16' },
-      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', align: 'center' , py: 'py-24' },
+      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', py: 'py-24' },
       faq: { ...common, items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
       divider: { ...common, height: 'md', showLine: true, py: 'py-0' },
-      footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', align: 'center', py: 'py-12' },
-      timeline: { ...common , items: [{title: 'Step 1', description: 'Describe the first step.' },{ title: 'Step 1', description: 'Describe the first step.' },{ title: 'Step 3', description: 'Describe the third step.' }] ,align: 'left',py: 'py-16' },
-      
+      footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', py: 'py-12' },
+      timeline: { ...common, items: [{ title: 'Step 1', description: 'Describe the first step.' }, { title: 'Step 1', description: 'Describe the first step.' }, { title: 'Step 3', description: 'Describe the third step.' }], py: 'py-16' },
+
     };
     return defaults[type] || { ...common };
   };
@@ -197,6 +237,43 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         el.id === id ? { ...el, data: newData } : el
       )
     }));
+  };
+
+  const duplicateElement = (id) => {
+    const elToClone = state.layout.find(el => el.id === id);
+    if (!elToClone) return;
+    const newEl = {
+      ...elToClone,
+      id: `${elToClone.type}-${Date.now()}`,
+    };
+    setState(prev => {
+      const idx = prev.layout.findIndex(el => el.id === id);
+      const newLayout = [...prev.layout];
+      newLayout.splice(idx + 1, 0, newEl);
+      return {
+        ...prev,
+        layout: newLayout,
+        selectedSectionId: newEl.id
+      }
+    });
+  };
+
+  const moveElementUp = (id) => {
+    setState(prev => {
+      const idx = prev.layout.findIndex(el => el.id === id);
+      if (idx <= 0) return prev; // Already at top
+      const newLayout = arrayMove(prev.layout, idx, idx - 1);
+      return { ...prev, layout: newLayout };
+    });
+  };
+
+  const moveElementDown = (id) => {
+    setState(prev => {
+      const idx = prev.layout.findIndex(el => el.id === id);
+      if (idx < 0 || idx >= prev.layout.length - 1) return prev; // Already at bottom
+      const newLayout = arrayMove(prev.layout, idx, idx + 1);
+      return { ...prev, layout: newLayout };
+    });
   };
 
   const selectSection = (id) => {
@@ -225,7 +302,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const currentTheme = themes[state.theme];
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col text-zinc-100 selection:bg-indigo-500/30">
+    <div className="h-screen bg-zinc-950 flex flex-col text-zinc-100 selection:bg-indigo-500/30 overflow-hidden">
       {/* Premium Header */}
       {!previewMode && (
         <header className="bg-zinc-900/50 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between z-50">
@@ -302,104 +379,217 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       </AnimatePresence>
 
       <div className={`flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}>
-        {/* Left Sidebar */}
+        {/* Left Sidebar - Nav Rail + Drawer */}
         {!previewMode && (
-          <aside className="w-72 bg-zinc-900 border-r border-white/5 overflow-y-auto hidden lg:flex flex-col">
-            <div className="p-6">
-              <h2 className="text-[10px] font-bold mb-6 uppercase tracking-[0.2em] text-zinc-500">Components</h2>
-              <div className="grid grid-cols-1 gap-2">
-                <ElementButton onClick={() => addElement('navbar')} label="Navbar" icon={<Layout className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('hero')} label="Hero Section" icon={<Layers className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('richtext')} label="Content Block" icon={<Edit3 className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('cards')} label="Grid Cards" icon={<Layout className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('cta')} label="Call to Action" icon={<Plus className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('footer')} label="Footer" icon={<Trash2 className="w-4 h-4" />} />
-                <ElementButton onClick={() => addElement('timeline')} label="Timeline" icon={<Layers className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('pricing')} label="pricing" icon={<DollarSign className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('contact')} label="Contact" icon={<Mail className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('testimonial')} label="Testimonial" icon={<MessageSquare className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('faq')} label="FAQ's" icon={<HelpCircle className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('features')} label="Features" icon={<Grid className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('stats')} label="Stats" icon={<BarChart3 className="w-4 h-4" />}/>
-                <ElementButton onClick={() => addElement('image')} label="Image" icon={<ImageIcon className="w-4 h-4" />}/>
-              </div>
+          // Container is now RELATIVE and only takes up the width of the Rail (w-20) in the flow
+          <div className="relative flex h-full shrink-0 z-40 w-20">
+            {/* 1. Navigation Rail (Fixed Icons) */}
+            <div className="w-20 bg-zinc-950 border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
+              <NavRailButton
+                active={activeTab === 'components'}
+                onClick={() => setActiveTab(activeTab === 'components' ? null : 'components')}
+                icon={<Grid className="w-5 h-5" />}
+                label="Elements"
+              />
+              <NavRailButton
+                active={activeTab === 'themes'}
+                onClick={() => setActiveTab(activeTab === 'themes' ? null : 'themes')}
+                icon={<Layers className="w-5 h-5" />}
+                label="Design"
+              />
             </div>
 
-            <div className="p-6 border-t border-white/5 flex-1">
-              <h2 className="text-[10px] font-bold mb-4 uppercase tracking-[0.2em] text-zinc-500">Theme Palette</h2>
-              <div className="flex flex-wrap gap-2">
-                {Object.keys(themes).map(name => (
-                  <button
-                    key={name}
-                    onClick={() => setTheme(name)}
-                    className={`px-3 py-1.5 text-[10px] font-bold rounded-lg transition-all capitalize ${state.theme === name ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30' : 'bg-white/5 hover:bg-white/10 text-zinc-400'}`}
-                  >
-                    {name}
-                  </button>
-                ))}
+            {/* 2. Drawer Panel (Absolute Overlay) */}
+            <div className={`
+                absolute top-0 left-20 h-full
+                bg-zinc-900 border-r border-white/5 flex flex-col 
+                transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] 
+                overflow-hidden shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)] z-30
+                ${activeTab ? 'w-80 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
+             `}>
+              {/* Content Container - Fixed Width to prevent internal squashing */}
+              <div className="flex flex-col h-full w-80 min-w-[20rem] bg-zinc-900">
+                {activeTab === 'components' && (
+                  <>
+                    {/* Search Header */}
+                    <div className="p-5 border-b border-white/5 bg-zinc-900 sticky top-0 z-20 space-y-4">
+                      <div>
+                        <h2 className="text-sm font-bold text-white">Elements</h2>
+                        <p className="text-[10px] text-zinc-500 mt-1">Drag and drop components to build</p>
+                      </div>
+                      <div className="relative group">
+                        <Search className="w-4 h-4 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-indigo-400 transition-colors" />
+                        <input
+                          type="text"
+                          placeholder="Search components..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full bg-black/20 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:bg-white/5 transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                      {searchQuery ? (
+                        // Search Results View
+                        <div className="p-4 grid grid-cols-2 gap-3">
+                          {Object.values(elementCategories).flat().filter(item =>
+                            item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.desc.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).map((item) => (
+                            <ElementCard
+                              key={item.type}
+                              onClick={() => addElement(item.type)}
+                              label={item.label}
+                              icon={<item.icon className="w-5 h-5" />}
+                              desc={item.desc}
+                            />
+                          ))}
+                          {Object.values(elementCategories).flat().filter(item =>
+                            item.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            item.desc.toLowerCase().includes(searchQuery.toLowerCase())
+                          ).length === 0 && (
+                              <div className="col-span-2 py-12 text-center opacity-40">
+                                <Search className="w-8 h-8 mx-auto mb-2 text-zinc-600" />
+                                <p className="text-xs">No components found</p>
+                              </div>
+                            )}
+                        </div>
+                      ) : (
+                        // Accordion View
+                        <div className="pb-12">
+                          {Object.entries(elementCategories).map(([section, items]) => (
+                            <div key={section} className="border-b border-white/5 last:border-0">
+                              <button
+                                onClick={() => setActiveSection(activeSection === section ? null : section)}
+                                className="w-full px-5 py-3 flex items-center justify-between hover:bg-white/5 transition-colors group"
+                              >
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 group-hover:text-white transition-colors">{section}</span>
+                                <ChevronDown className={`w-3 h-3 text-zinc-600 transition-transform duration-300 ${activeSection === section ? 'rotate-180 text-zinc-400' : ''}`} />
+                              </button>
+                              <div className={`grid transition-all duration-300 ease-in-out overflow-hidden ${activeSection === section ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+                                <div className="min-h-0">
+                                  <div className="p-4 grid grid-cols-2 gap-3 bg-black/10 inset-shadow-sm">
+                                    {items.map((item) => (
+                                      <ElementCard
+                                        key={item.type}
+                                        onClick={() => addElement(item.type)}
+                                        label={item.label}
+                                        icon={<item.icon className="w-5 h-5" />}
+                                        desc={item.desc}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {activeTab === 'themes' && (
+                  <>
+                    <div className="p-5 border-b border-white/5 bg-zinc-900 sticky top-0 z-10">
+                      <h2 className="text-sm font-bold text-white">Design System</h2>
+                      <p className="text-[10px] text-zinc-500 mt-1">Global styling and color palettes</p>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.keys(themes).map(name => (
+                          <button
+                            key={name}
+                            onClick={() => setTheme(name)}
+                            className={`p-3 rounded-xl transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-indigo-500 ring-1 ring-indigo-500/50 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
+                          >
+                            <span className={`block mb-2 w-4 h-4 rounded-full ${themes[name].accent.split(' ')[0]}`}></span>
+                            <span className="text-zinc-300 group-hover:text-white transition-colors">{name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
-          </aside>
+          </div>
         )}
 
         {/* Center Canvas */}
-        <main className={`flex-1 overflow-y-auto ${previewMode ? 'p-0' : 'p-8 lg:p-12 bg-zinc-950'} transition-all scrollbar-hide`}>
-          <div className={`${previewMode ? 'w-full' : 'max-w-6xl mx-auto rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden border border-white/5'} ${currentTheme.bg} min-h-[90vh] transition-all duration-500`}>
-            {state.layout.length === 0 ? (
-              <div className={`flex items-center justify-center h-[70vh] ${currentTheme.muted}`}>
-                <div className="text-center">
-                  <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="w-20 h-20 bg-white/5 rounded-3xl mx-auto flex items-center justify-center mb-6"
-                  >
-                    <Plus className="w-10 h-10 opacity-20" />
-                  </motion.div>
-                  <p className="text-xl font-semibold opacity-80">Canvas is empty</p>
-                  <p className="opacity-40 mt-2 text-sm">Select build elements from the library</p>
+        <main className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-zinc-950 bg-[radial-gradient(#ffffff1a_1px,transparent_1px)] [background-size:16px_16px]'}`}>
+
+          {/* Zoom Bar */}
+          {!previewMode && <ZoomBar zoom={zoom} onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />}
+
+          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent flex items-start justify-center">
+            <div
+              style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
+              className={`
+                   transition-all duration-200 ease-out 
+                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 min-h-[90vh] w-full max-w-6xl'} 
+                   ${currentTheme.bg}
+                `}
+            >
+              {state.layout.length === 0 ? (
+                <div className={`flex items-center justify-center h-[70vh] ${currentTheme.muted}`}>
+                  <div className="text-center">
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="w-20 h-20 bg-black/5 rounded-3xl mx-auto flex items-center justify-center mb-6"
+                    >
+                      <Plus className="w-10 h-10 opacity-20" />
+                    </motion.div>
+                    <p className="text-xl font-semibold opacity-80">Canvas is empty</p>
+                    <p className="opacity-40 mt-2 text-sm">Select build elements from the library</p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                <SortableContext items={state.layout.map(el => el.id)} strategy={verticalListSortingStrategy}>
-                  {state.layout.map((element) => (
-                    <SortableSection
-                      key={element.id}
-                      element={element}
-                      isSelected={state.selectedSectionId === element.id}
-                      onSelect={() => selectSection(element.id)}
-                      theme={currentTheme}
-                      previewMode={previewMode}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            )}
+              ) : (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                  <SortableContext items={state.layout.map(el => el.id)} strategy={verticalListSortingStrategy}>
+                    {state.layout.map((element) => (
+                      <SortableSection
+                        key={element.id}
+                        element={element}
+                        isSelected={state.selectedSectionId === element.id}
+                        onSelect={() => selectSection(element.id)}
+                        theme={currentTheme}
+                        previewMode={previewMode}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              )}
+            </div>
           </div>
         </main>
 
         {/* Right Sidebar - Inspector */}
         {!previewMode && (
-          <aside className="w-80 bg-zinc-900 border-l border-white/5 overflow-y-auto hidden xl:flex flex-col sticky top-0 h-screen">
-            <div className="p-6">
-              <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-8">Properties</h2>
-
-              {selectedSection ? (
+          <aside className="w-80 bg-zinc-900 border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40 shadow-xl">
+            {selectedSection ? (
+              <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-zinc-900">
                 <Inspector
                   section={selectedSection}
                   onUpdate={(newData) => updateElement(selectedSection.id, newData)}
+                  onDuplicate={() => duplicateElement(selectedSection.id)}
                   onRemove={() => removeElement(selectedSection.id)}
+                  onMoveUp={() => moveElementUp(selectedSection.id)}
+                  onMoveDown={() => moveElementDown(selectedSection.id)}
                 />
-              ) : (
-                <div className="text-center text-zinc-600 mt-24">
-                  <div className="w-16 h-16 bg-white/5 rounded-full mx-auto flex items-center justify-center mb-6">
-                    <Edit3 className="w-8 h-8 opacity-20" />
-                  </div>
-                  <p className="text-sm font-semibold">Inspector Idle</p>
-                  <p className="text-[10px] mt-2 opacity-50 px-8">Select a canvas element to tune its parameters</p>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-center text-zinc-600 p-8">
+                <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-6 rotate-3">
+                  <Edit3 className="w-8 h-8 opacity-20" />
                 </div>
-              )}
-            </div>
+                <p className="text-sm font-bold text-zinc-500 uppercase tracking-wider">No Selection</p>
+                <p className="text-[10px] mt-2 opacity-40 max-w-[150px]">Select an element to edit properties</p>
+              </div>
+            )}
           </aside>
         )}
       </div>
@@ -422,70 +612,111 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 }
 
 // Helper Components
-function EditableText({ value, onChange, className, type = 'input' }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempValue, setTempValue] = useState(value);
+function EditableText({ value, onChange, className, type = 'input', placeholder = 'Type here...' }) {
+  const ref = useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const lastEmittedValue = useRef(value);
+  const prevValue = useRef(value);
 
+  // Sync external changes only when not focused
   useEffect(() => {
-    setTempValue(value);
-  }, [value]);
+    // Only update DOM if the PROP has actually changed (external update)
+    if (value !== prevValue.current) {
+      prevValue.current = value;
 
-  const handleBlur = () => {
-    setIsEditing(false);
-    if (tempValue !== value) onChange(tempValue);
+      // If we are not focused, accept the new value
+      if (ref.current && !isFocused) {
+        ref.current.innerText = value || '';
+        lastEmittedValue.current = value;
+      }
+    }
+  }, [value, isFocused]);
+
+  const handleBlur = (e) => {
+    setIsFocused(false);
+    const newValue = e.target.innerText;
+
+    // Only emit if different
+    if (newValue !== value) {
+      lastEmittedValue.current = newValue;
+      onChange(newValue);
+    }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && type === 'input') {
-      handleBlur();
+    if (e.key === 'Enter' && type !== 'textarea') {
+      e.preventDefault();
+      e.target.blur();
     }
-    if (e.key === 'Escape') {
-      setTempValue(value);
-      setIsEditing(false);
-    }
+    e.stopPropagation();
   };
 
-  if (isEditing) {
-    return type === 'textarea' ? (
-      <textarea
-        autoFocus
-        value={tempValue}
-        onChange={(e) => setTempValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={`bg-indigo-500/10 outline-none ring-2 ring-indigo-500 rounded px-1 w-full resize-none ${className}`}
-        rows={Math.max(2, tempValue.split('\n').length)}
-      />
-    ) : (
-      <input
-        autoFocus
-        value={tempValue}
-        onChange={(e) => setTempValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={`bg-indigo-500/10 outline-none ring-2 ring-indigo-500 rounded px-1 w-full ${className}`}
-      />
-    );
-  }
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+  };
 
   return (
-    <div
-      onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-      className={`hover:ring-1 hover:ring-indigo-500/30 rounded cursor-text transition-all ${className}`}
+    <span
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      onFocus={() => setIsFocused(true)}
+      onBlur={handleBlur}
+      onKeyDown={handleKeyDown}
+      onPaste={handlePaste}
+      onClick={(e) => e.stopPropagation()}
+      className={`
+        outline-none min-w-[1ch] inline-block align-top transition-all duration-200 decoration-clone cursor-text
+        ${isFocused ? 'bg-indigo-500/20 ring-2 ring-indigo-500 rounded px-1 -mx-1 relative z-10' : 'hover:bg-indigo-500/10 hover:ring-1 hover:ring-indigo-500/30 rounded px-0.5 -mx-0.5'}
+        ${!value ? 'min-w-[30px] opacity-50 before:content-[attr(data-placeholder)]' : ''}
+        ${className}
+      `}
+      data-placeholder={placeholder}
+      style={{ whiteSpace: type === 'textarea' ? 'pre-wrap' : 'normal' }}
     >
-      {value || <span className="opacity-20 italic">Empty text...</span>}
-    </div>
+      {value}
+    </span>
   );
 }
 
-function ElementButton({ onClick, label, icon }) {
+function NavRailButton({ active, onClick, icon, label }) {
   return (
     <button
       onClick={onClick}
-      className="group flex items-center gap-4 w-full px-4 py-3 bg-white/2 hover:bg-indigo-600 border border-white/5 rounded-2xl text-zinc-400 transition-all hover:text-white hover:border-indigo-500 hover:shadow-lg hover:shadow-indigo-600/20 active:scale-[0.98]"
+      className={`group flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${active ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
-      <div className="p-2 bg-white/5 rounded-xl group-hover:bg-white/10 transition-colors">{icon}</div>
-      <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+      <div className={`p-3 rounded-2xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'bg-transparent group-hover:bg-white/5'}`}>
+        {icon}
+      </div>
+      <span className="text-[10px] font-bold">{label}</span>
+      {active && (
+        <motion.div layoutId="activeRail" className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+      )}
+    </button>
+  )
+}
+
+function ElementCard({ onClick, label, icon, desc }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group flex flex-col items-start gap-2 w-full p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-indigo-500/50 rounded-xl transition-all hover:shadow-xl hover:shadow-indigo-500/10 active:scale-[0.98] text-left relative overflow-hidden"
+    >
+      <div className="flex items-start justify-between w-full">
+        <div className="p-2 bg-white/5 rounded-lg group-hover:bg-indigo-500/20 text-zinc-400 group-hover:text-indigo-400 transition-colors">
+          {icon}
+        </div>
+        {/* Hidden but accessible add action, entire card is clickable */}
+      </div>
+      <div>
+        <span className="text-[11px] font-bold text-zinc-200 group-hover:text-white block">{label}</span>
+        <span className="text-[9px] text-zinc-500 group-hover:text-zinc-400 leading-tight block mt-0.5">{desc}</span>
+      </div>
+      <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Plus className="w-3 h-3 text-indigo-400" />
+      </div>
     </button>
   );
 }
@@ -542,17 +773,17 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
     video: VideoSection,
     buttons: ButtonsSection,
     features: FeaturesSection,
-   
+
     faq: FAQSection,
     divider: DividerSection,
     footer: FooterSection,
     // ADDED COMPONENT
     timeline: TimelineSection,
-    
+
     stats: StatsSection,
     cta: CTASection,
-    
-  };  
+
+  };
 
   const Component = components[type] || (({ type, theme }) => (
     <div className={`py-16 px-12 text-center border-y border-dashed ${theme.border} opacity-50`}>
@@ -594,345 +825,436 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
   );
 }
 
-// Inspector Form Blocks
-function Inspector({ section, onUpdate, onRemove }) {
-  const { type, data } = section;
-  const [activeTab, setActiveTab] = useState('content');
-
+// Zoom Controls Component
+function ZoomBar({ zoom, onZoomIn, onZoomOut }) {
   return (
-    <div className="space-y-8 pb-32">
-      <div className="p-4 bg-indigo-600/10 border border-indigo-500/20 rounded-2xl mb-4">
-        <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-1">Active Object</p>
-        <p className="text-xs font-bold text-white uppercase">{type}</p>
-      </div>
-
-      <div className="flex gap-1 p-1 bg-black/20 rounded-xl mb-6">
-        <button
-          onClick={() => setActiveTab('content')}
-          className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'content' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
-        >
-          Content
-        </button>
-        <button
-          onClick={() => setActiveTab('design')}
-          className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all ${activeTab === 'design' ? 'bg-indigo-600 text-white' : 'text-zinc-500 hover:text-white'}`}
-        >
-          Design
-        </button>
-      </div>
-
-      {activeTab === 'content' ? (
-        <div className="space-y-6">
-          {type === 'hero' && (
-            <>
-              <ControlGroup label="Copy">
-                <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-                <Textarea label="Supporting Text" value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} />
-                <Input label="Primary Button" value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
-              </ControlGroup>
-              <ControlGroup label="Positioning">
-                <Select label="Text Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center']} />
-              </ControlGroup>
-            </>
-          )}
-
-          {type === 'navbar' && (
-            <>
-              <ControlGroup label="Identity">
-                <Input label="Brand Logo" value={data.logo} onChange={(v) => onUpdate({ ...data, logo: v })} />
-              </ControlGroup>
-              <ControlGroup label="Navigation">
-                <Textarea label="Links (comma separated)" value={data.links.join(', ')} onChange={(v) => onUpdate({ ...data, links: v.split(',').map(s => s.trim()) })} />
-              </ControlGroup>
-            </>
-          )}
-
-          {type === 'richtext' && (
-            <ControlGroup label="Article">
-              <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-              <Textarea label="Content Body" value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} rows={10} />
-            </ControlGroup>
-          )}
-
-          {type === 'text' && (
-            <ControlGroup label="Text Content">
-              <Textarea label="Content" value={data.content} onChange={(v) => onUpdate({ ...data, content: v })} />
-              <Select label="Font Size" value={data.fontSize} onChange={(v) => onUpdate({ ...data, fontSize: v })} options={['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl']} />
-              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
-            </ControlGroup>
-          )}
-
-          {type === 'image' && (
-            <ControlGroup label="Media">
-              <Input label="Image URL" value={data.url} onChange={(v) => onUpdate({ ...data, url: v })} />
-              <Input label="Caption" value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
-              <Input label="Height (px)" value={data.height} onChange={(v) => onUpdate({ ...data, height: parseInt(v) || 0 })} />
-              <div className="flex items-center gap-3 px-1 py-1">
-                <input type="checkbox" checked={data.fullWidth} onChange={(e) => onUpdate({ ...data, fullWidth: e.target.checked })} className="w-4 h-4 rounded border-white/10 bg-zinc-950" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase">Full Width Container</span>
-              </div>
-            </ControlGroup>
-          )}
-
-          {type === 'cards' && (
-            <>
-              <ControlGroup label="Grid Config">
-                <Input label="Number of Cards" value={data.count} onChange={(v) => {
-                  const count = Math.max(1, parseInt(v) || 1);
-                  onUpdate({
-                    ...data,
-                    count,
-                    titles: Array(count).fill('').map((_, i) => data.titles[i] || `Title ${i + 1}`),
-                    descriptions: Array(count).fill('').map((_, i) => data.descriptions[i] || `Description ${i + 1}`),
-                    imageUrls: Array(count).fill('').map((_, i) => data.imageUrls[i] || 'https://via.placeholder.com/400x300')
-                  });
-                }} />
-              </ControlGroup>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 scrollbar-hide">
-                {data.titles.map((title, i) => (
-                  <div key={i} className="p-4 bg-white/5 rounded-2xl border border-white/5 space-y-4">
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase">Card {i + 1}</p>
-                    <Input label="Image URL" value={data.imageUrls[i]} onChange={(v) => {
-                      const newImgs = [...data.imageUrls];
-                      newImgs[i] = v;
-                      onUpdate({ ...data, imageUrls: newImgs });
-                    }} />
-                    <Input label="Title" value={title} onChange={(v) => {
-                      const newTitles = [...data.titles];
-                      newTitles[i] = v;
-                      onUpdate({ ...data, titles: newTitles });
-                    }} />
-                    <Textarea label="Description" value={data.descriptions[i]} onChange={(v) => {
-                      const newDesc = [...data.descriptions];
-                      newDesc[i] = v;
-                      onUpdate({ ...data, descriptions: newDesc });
-                    }} />
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {type === 'cta' && (
-            <ControlGroup label="Call to Action">
-              <Input label="Heading" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-              <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => onUpdate({ ...data, supportingText: v })} />
-              <Input label="Button Label" value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
-              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
-            </ControlGroup>
-          )}
-
-          {type === 'footer' && (
-            <ControlGroup label="Footer Content">
-              <Input label="Copyright Text" value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} />
-              <Select label="Alignment" value={data.align} onChange={(v) => onUpdate({ ...data, align: v })} options={['left', 'center', 'right']} />
-            </ControlGroup>
-          )}
-
-          {/* Fallback for other types or implement them similarly */}
-          {!['hero', 'navbar', 'richtext', 'text', 'image', 'cards', 'cta', 'footer'].includes(type) && (
-            <div className="p-4 bg-white/5 rounded-2xl italic text-[10px] text-zinc-500 text-center">
-              Add more custom controls for {type} here...
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          <ControlGroup label="Layout & Spacing">
-            <Select
-              label="Vertical Padding"
-              value={data.py}
-              onChange={(v) => onUpdate({ ...data, py: v })}
-              options={['py-0', 'py-4', 'py-8', 'py-12', 'py-20', 'py-32', 'py-40', 'py-60']}
-            />
-            <Select
-              label="Horizontal Padding"
-              value={data.px}
-              onChange={(v) => onUpdate({ ...data, px: v })}
-              options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']}
-            />
-            <Select
-              label="Max Width"
-              value={data.maxWidth}
-              onChange={(v) => onUpdate({ ...data, maxWidth: v })}
-              options={['max-w-4xl', 'max-w-5xl', 'max-w-6xl', 'max-w-7xl', 'max-w-full']}
-            />
-          </ControlGroup>
-
-          <ControlGroup label="Styling">
-            <Select
-              label="Border Radius"
-              value={data.radius}
-              onChange={(v) => onUpdate({ ...data, radius: v })}
-              options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-[40px]', 'rounded-full']}
-            />
-            <Select
-              label="Shadow"
-              value={data.shadow}
-              onChange={(v) => onUpdate({ ...data, shadow: v })}
-              options={['shadow-none', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl']}
-            />
-            <Select
-              label="Entrance Animation"
-              value={data.animation || 'none'}
-              onChange={(v) => onUpdate({ ...data, animation: v })}
-              options={['none', 'fadeUp', 'fadeDown', 'fadeIn', 'scaleUp', 'slideLeft', 'slideRight']}
-            />
-          </ControlGroup>
-
-          <ControlGroup label="Custom Colors">
-            <Input label="Background Color (CSS)" value={data.customBg} onChange={(v) => onUpdate({ ...data, customBg: v })} placeholder="#ffffff or rgba(0,0,0,0.5)" />
-            <Input label="Text Color (CSS)" value={data.customText} onChange={(v) => onUpdate({ ...data, customText: v })} placeholder="#000000" />
-          </ControlGroup>
-        </div>
-      )}
-
-      {type === 'pricing' && (
-        <div className="space-y-6">
-          {data.plans.map((plan, i) => (
-            <ControlGroup key={i} label={`Plan ${i + 1}`}>
-              <Input label="Name" value={plan.name} onChange={(v) => {
-                const newPlans = [...data.plans];
-                newPlans[i] = { ...plan, name: v };
-                onUpdate({ ...data, plans: newPlans });
-              }} />
-              <Input label="Price" value={plan.price} onChange={(v) => {
-                const newPlans = [...data.plans];
-                newPlans[i] = { ...plan, price: v };
-                onUpdate({ ...data, plans: newPlans });
-              }} />
-            </ControlGroup>
-          ))}
-        </div>
-      )}
-
-      {type === 'features' && (
-        <div className="space-y-6">
-          <ControlGroup label="Grid Config">
-            <Input label="Columns" value={data.columns} onChange={(v) => onUpdate({ ...data, columns: parseInt(v) || 3 })} />
-          </ControlGroup>
-          {data.items.map((item, i) => (
-            <ControlGroup key={i} label={`Feature ${i + 1}`}>
-              <Input label="Title" value={item.title} onChange={(v) => {
-                const newItems = [...data.items];
-                newItems[i] = { ...item, title: v };
-                onUpdate({ ...data, items: newItems });
-              }} />
-              <Input label="Description" value={item.description} onChange={(v) => {
-                const newItems = [...data.items];
-                newItems[i] = { ...item, description: v };
-                onUpdate({ ...data, items: newItems });
-              }} />
-            </ControlGroup>
-          ))}
-          <button onClick={() => onUpdate({ ...data, items: [...data.items, { title: 'New Feature', description: 'Desc' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add Feature</button>
-        </div>
-      )}
-
-      {type === 'stats' && (
-        <div className="space-y-6">
-          {data.stats.map((stat, i) => (
-            <ControlGroup key={i} label={`Stat ${i + 1}`}>
-              <Input label="Label" value={stat.label} onChange={(v) => {
-                const newStats = [...data.stats];
-                newStats[i] = { ...stat, label: v };
-                onUpdate({ ...data, stats: newStats });
-              }} />
-              <Input label="Value" value={stat.value} onChange={(v) => {
-                const newStats = [...data.stats];
-                newStats[i] = { ...stat, value: v };
-                onUpdate({ ...data, stats: newStats });
-              }} />
-            </ControlGroup>
-          ))}
-          <button onClick={() => onUpdate({ ...data, stats: [...data.stats, { label: 'Metric', value: '100%' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add Stat</button>
-        </div>
-      )}
-
-      {type === 'contact' && (
-        <div className="space-y-6">
-          <ControlGroup label="Header">
-            <Input label="Heading" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-          </ControlGroup>
-          <ControlGroup label="Contact Info">
-            <Input label="Email" value={data.email} onChange={(v) => onUpdate({ ...data, email: v })} />
-            <Input label="Phone" value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
-            <Input label="Address" value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
-          </ControlGroup>
-        </div>
-      )}
-
-      {type === 'faq' && (
-        <div className="space-y-6">
-          {data.items.map((item, i) => (
-            <ControlGroup key={i} label={`FAQ ${i + 1}`}>
-              <Input label="Question" value={item.question} onChange={(v) => {
-                const newItems = [...data.items];
-                newItems[i] = { ...item, question: v };
-                onUpdate({ ...data, items: newItems });
-              }} />
-              <Textarea label="Answer" value={item.answer} onChange={(v) => {
-                const newItems = [...data.items];
-                newItems[i] = { ...item, answer: v };
-                onUpdate({ ...data, items: newItems });
-              }} />
-            </ControlGroup>
-          ))}
-          <button onClick={() => onUpdate({ ...data, items: [...data.items, { question: 'New Question', answer: 'Answer' }] })} className="w-full py-2 bg-white/5 border border-white/5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-all">Add FAQ</button>
-        </div>
-      )}
-
-      {type === 'video' && (
-        <div className="space-y-6">
-          <ControlGroup label="Heading">
-            <Input label="Title" value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-          </ControlGroup>
-          <ControlGroup label="Source">
-            <Input label="Embed URL" value={data.videoUrl} onChange={(v) => onUpdate({ ...data, videoUrl: v })} />
-          </ControlGroup>
-        </div>
-      )}
-
-      {type === 'logogrid' && (
-        <div className="space-y-6">
-          <ControlGroup label="Layout">
-            <Input label="Columns" value={data.columns} onChange={(v) => onUpdate({ ...data, columns: parseInt(v) || 4 })} />
-          </ControlGroup>
-          <ControlGroup label="Logos">
-            {data.logos.map((logo, i) => (
-              <Input key={i} label={`Logo ${i + 1} URL`} value={logo} onChange={(v) => {
-                const newLogos = [...data.logos];
-                newLogos[i] = v;
-                onUpdate({ ...data, logos: newLogos });
-              }} />
-            ))}
-          </ControlGroup>
-        </div>
-      )}
-
-      {!['hero', 'navbar', 'richtext', 'text', 'image', 'cards', 'testimonials', 'pricing', 'contact', 'logogrid', 'video', 'buttons', 'features', 'stats', 'cta', 'faq', 'divider', 'footer'].includes(type) && (
-        <div className="p-6 bg-white/2 border border-white/5 rounded-2xl italic text-[10px] text-zinc-500">
-          Complex controls for {type} are currently being mapped...
-        </div>
-      )}
-
-      <div className="pt-8 border-t border-white/5">
-        <button
-          onClick={onRemove}
-          className="flex items-center justify-center gap-3 w-full px-4 py-4 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-2xl transition-all text-[10px] font-bold uppercase tracking-widest border border-red-500/20"
-        >
-          <Trash2 className="w-4 h-4" />
-          Purge Component
-        </button>
-      </div>
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl z-50">
+      <button onClick={onZoomOut} className="p-1 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+        <Minus className="w-4 h-4" />
+      </button>
+      <span className="text-xs font-bold font-mono text-zinc-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
+      <button onClick={onZoomIn} className="p-1 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+        <Plus className="w-4 h-4" />
+      </button>
     </div>
   );
 }
 
+// Inspector Components
+function InspectorHeader({ type, onDuplicate, onDelete, onMoveUp, onMoveDown }) {
+  return (
+    <div className="sticky top-0 z-20 bg-zinc-900/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]">
+          <Layers className="w-4 h-4 text-indigo-400" />
+        </div>
+        <div>
+          <h3 className="text-xs font-bold text-white uppercase tracking-wide">{type}</h3>
+        </div>
+      </div>
+
+      <div className="flex items-center bg-white/5 rounded-lg border border-white/5 p-0.5">
+        <div className="flex items-center gap-0.5 pr-1 border-r border-white/5 mr-1">
+          <button onClick={onMoveUp} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" title="Move Up">
+            <ArrowUp className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={onMoveDown} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" title="Move Down">
+            <ArrowDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <button onClick={onDuplicate} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-all hover:scale-105" title="Duplicate">
+          <Copy className="w-3.5 h-3.5" />
+        </button>
+        <button onClick={onDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-all hover:scale-105" title="Delete">
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function QuickControls({ type, data, onUpdate }) {
+  if (!data) return null;
+
+  // Strict allowlist for alignment controls
+  const supportsAlign = ['hero', 'text', 'buttons', 'richtext', 'footer', 'cta'].includes(type);
+
+  return (
+    <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-white/5 bg-zinc-900/50">
+      {/* Alignment Quick Toggle */}
+      {supportsAlign ? (
+        <div className="flex items-center bg-black/20 rounded-lg p-1 border border-white/5">
+          {['left', 'center', 'right'].map(align => (
+            <button
+              key={align}
+              onClick={() => onUpdate({ ...data, align })}
+              className={`flex-1 h-7 flex items-center justify-center rounded-md transition-all ${data.align === align ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-600 hover:text-zinc-300'}`}
+              title={`Align ${align}`}
+            >
+              {align === 'left' && <AlignLeft className="w-3.5 h-3.5" />}
+              {align === 'center' && <AlignCenter className="w-3.5 h-3.5" />}
+              {align === 'right' && <AlignRight className="w-3.5 h-3.5" />}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full text-[10px] lowercase font-mono text-zinc-600 italic select-none">
+          no alignment options
+        </div>
+      )}
+
+      {/* Visibility / Spacing Preset Toggle (Mock functionality for now) */}
+      <div className="flex items-center gap-2">
+        <button
+          className="h-full px-3 flex items-center justify-center bg-black/20 hover:bg-white/5 border border-white/5 rounded-lg text-zinc-500 hover:text-white transition-colors gap-2 w-full"
+          title="Reset Spacing"
+          onClick={() => onUpdate({ ...data, py: 'py-20', px: 'px-8' })}
+        >
+          <Layout className="w-3.5 h-3.5" />
+          <span className="text-[9px] font-bold uppercase">Reset</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function InspectorSection({ title, icon: Icon, isOpen, onToggle, children }) {
+  return (
+    <div className="border-b border-white/5 last:border-0 relative">
+      <button
+        onClick={onToggle}
+        className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors group"
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon className={`w-3.5 h-3.5 transition-colors ${isOpen ? 'text-indigo-400' : 'text-zinc-600 group-hover:text-zinc-400'}`} />}
+          <span className={`text-[10px] font-bold uppercase tracking-wider transition-colors ${isOpen ? 'text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>{title}</span>
+        </div>
+        <ChevronDown className={`w-3 h-3 text-zinc-700 transition-transform duration-300 group-hover:text-zinc-500 ${isOpen ? 'rotate-180 text-indigo-500/80 group-hover:text-indigo-400' : ''}`} />
+      </button>
+      <div className={`grid transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+        <div className="min-h-0">
+          <div className="px-5 pb-6 pt-2 space-y-5">
+            {children}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveDown }) {
+  const { type, data, id } = section;
+  const [activeSection, setActiveSection] = useState('Content');
+
+  const update = (key, value) => {
+    onUpdate({ ...data, [key]: value });
+  };
+
+  const toggle = (sec) => setActiveSection(activeSection === sec ? null : sec);
+
+  return (
+    <div className="pb-32 min-h-screen bg-zinc-900 overflow-x-hidden">
+      <InspectorHeader
+        type={type}
+        onDuplicate={onDuplicate}
+        onDelete={onRemove}
+        onMoveUp={onMoveUp}
+        onMoveDown={onMoveDown}
+      />
+      <QuickControls type={type} data={data} onUpdate={onUpdate} />
+
+      {/* 1. CONTENT SECTION */}
+      <InspectorSection title="Content" icon={Type} isOpen={activeSection === 'Content'} onToggle={() => toggle('Content')}>
+        {type === 'hero' && (
+          <>
+            <ControlGroup label="Text Content">
+              <Input label="Title" value={data.heading} onChange={(v) => update('heading', v)} />
+              <Textarea label="Subtitle" value={data.subheading} onChange={(v) => update('subheading', v)} rows={3} />
+            </ControlGroup>
+            <ControlGroup label="Action">
+              <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
+            </ControlGroup>
+          </>
+        )}
+
+        {type === 'navbar' && (
+          <>
+            <ControlGroup label="Brand">
+              <Input label="Logo Text" value={data.logo} onChange={(v) => update('logo', v)} />
+            </ControlGroup>
+            <ControlGroup label="Links">
+              <Textarea label="Menu Items (comma separated)" value={data.links.join(', ')} onChange={(v) => update('links', v.split(',').map(s => s.trim()))} />
+            </ControlGroup>
+          </>
+        )}
+
+        {type === 'richtext' && (
+          <ControlGroup label="Article">
+            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+            <Textarea label="Body Text" value={data.body} onChange={(v) => update('body', v)} rows={8} />
+          </ControlGroup>
+        )}
+
+        {type === 'text' && (
+          <ControlGroup label="Typography">
+            <Select label="Size" value={data.fontSize} onChange={(v) => update('fontSize', v)} options={['xs', 'sm', 'base', 'lg', 'xl', '2xl', '3xl']} />
+            <Textarea label="Content" value={data.content} onChange={(v) => update('content', v)} rows={4} />
+          </ControlGroup>
+        )}
+
+        {type === 'video' && (
+          <ControlGroup label="Video Source">
+            <Input label="Embed URL" value={data.videoUrl} onChange={(v) => update('videoUrl', v)} />
+          </ControlGroup>
+        )}
+
+        {type === 'divider' && (
+          <ControlGroup label="Divider Settings">
+            <Select label="Height" value={data.height} onChange={(v) => update('height', v)} options={['sm', 'md', 'lg']} />
+            <div className="flex items-center gap-2 mt-2">
+              <input type="checkbox" checked={data.showLine} onChange={(e) => update('showLine', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
+              <span className="text-xs text-zinc-400">Show Line</span>
+            </div>
+          </ControlGroup>
+        )}
+
+        {type === 'buttons' && (
+          <div className="space-y-4">
+            {data.buttons.map((btn, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label={`Button ${i + 1}`} value={btn.label} onChange={(v) => {
+                  const newBtns = [...data.buttons];
+                  newBtns[i] = { ...btn, label: v };
+                  update('buttons', newBtns);
+                }} />
+              </div>
+            ))}
+            <button onClick={() => update('buttons', [...data.buttons, { label: 'New Action' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Button</button>
+          </div>
+        )}
+
+        {type === 'pricing' && (
+          <div className="space-y-4">
+            {data.plans.map((plan, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label="Name" value={plan.name} onChange={(v) => {
+                  const newPlans = [...data.plans];
+                  newPlans[i] = { ...plan, name: v };
+                  update('plans', newPlans);
+                }} />
+                <Input label="Price" value={plan.price} onChange={(v) => {
+                  const newPlans = [...data.plans];
+                  newPlans[i] = { ...plan, price: v };
+                  update('plans', newPlans);
+                }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {type === 'testimonials' && (
+          <div className="space-y-4">
+            {data.items.map((item, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label="Name" value={item.name} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, name: v };
+                  update('items', newItems);
+                }} />
+                <Input label="Role" value={item.role} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, role: v };
+                  update('items', newItems);
+                }} />
+                <Textarea label="Quote" value={item.quote} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, quote: v };
+                  update('items', newItems);
+                }} rows={2} />
+                <Input label="Avatar URL" value={item.imageUrl} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, imageUrl: v };
+                  update('items', newItems);
+                }} />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {['timeline'].includes(type) && (
+          <div className="space-y-4">
+            {data.items.map((item, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label="Title" value={item.title} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, title: v };
+                  update('items', newItems);
+                }} />
+                <Textarea label="Description" value={item.description} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, description: v };
+                  update('items', newItems);
+                }} rows={2} />
+              </div>
+            ))}
+            <button onClick={() => update('items', [...data.items, { title: 'Step', description: 'Desc' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Step</button>
+          </div>
+        )}
+
+        {type === 'image' && (
+          <ControlGroup label="Image Source">
+            <Input label="URL" value={data.url} onChange={(v) => update('url', v)} placeholder="https://..." />
+            <Input label="Caption" value={data.caption} onChange={(v) => update('caption', v)} />
+          </ControlGroup>
+        )}
+
+        {type === 'cards' && (
+          <>
+            <ControlGroup label="Grid Config">
+              <Input label="Count" type="number" value={data.count} onChange={(v) => {
+                const count = Math.max(1, parseInt(v) || 1);
+                update('count', count);
+                // Preserve existing data if possible, else fill
+                const newTitles = Array(count).fill('').map((_, i) => data.titles[i] || `Card ${i + 1}`);
+                const newDesc = Array(count).fill('').map((_, i) => data.descriptions[i] || 'Description...');
+                const newImgs = Array(count).fill('').map((_, i) => data.imageUrls[i] || 'https://via.placeholder.com/400x300');
+                onUpdate({ ...data, count, titles: newTitles, descriptions: newDesc, imageUrls: newImgs });
+              }} />
+            </ControlGroup>
+            <div className="space-y-4">
+              {data.titles.map((title, i) => (
+                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Card {i + 1}</span>
+                  </div>
+                  <Input label="Title" value={title} onChange={(v) => {
+                    const newTitles = [...data.titles];
+                    newTitles[i] = v;
+                    update('titles', newTitles);
+                  }} />
+                  <Textarea label="Description" value={data.descriptions[i]} onChange={(v) => {
+                    const newDesc = [...data.descriptions];
+                    newDesc[i] = v;
+                    update('descriptions', newDesc);
+                  }} rows={2} />
+                  <Input label="Image URL" value={data.imageUrls[i]} onChange={(v) => {
+                    const newImgs = [...data.imageUrls];
+                    newImgs[i] = v;
+                    update('imageUrls', newImgs);
+                  }} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {type === 'stats' && (
+          <div className="space-y-4">
+            {data.stats.map((stat, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label="Label" value={stat.label} onChange={(v) => {
+                  const newStats = [...data.stats];
+                  newStats[i] = { ...stat, label: v };
+                  update('stats', newStats);
+                }} />
+                <Input label="Value" value={stat.value} onChange={(v) => {
+                  const newStats = [...data.stats];
+                  newStats[i] = { ...stat, value: v };
+                  update('stats', newStats);
+                }} />
+              </div>
+            ))}
+            <button onClick={() => update('stats', [...data.stats, { label: 'New Metric', value: '0' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Stat</button>
+          </div>
+        )}
+
+        {type === 'features' && (
+          <div className="space-y-4">
+            {data.items.map((item, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                <Input label="Title" value={item.title} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, title: v };
+                  update('items', newItems);
+                }} />
+                <Textarea label="Description" value={item.description} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, description: v };
+                  update('items', newItems);
+                }} rows={2} />
+              </div>
+            ))}
+            <button onClick={() => update('items', [...data.items, { title: 'Feature', description: 'Description' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Feature</button>
+          </div>
+        )}
+
+        {/* Fallback for simple inputs if not explicitly handled above but common */}
+        {data.heading !== undefined && !['hero', 'richtext', 'cta', 'contact', 'video'].includes(type) && (
+          <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+        )}
+        {data.text !== undefined && type !== 'footer' && (
+          <Input label="Text" value={data.text} onChange={(v) => update('text', v)} />
+        )}
+      </InspectorSection>
+
+      {/* 2. LAYOUT SECTION */}
+      <InspectorSection title="Layout" icon={Layout} isOpen={activeSection === 'Layout'} onToggle={() => toggle('Layout')}>
+        <ControlGroup label="Spacing">
+          <Select label="Vertical Scale" value={data.py} onChange={(v) => update('py', v)} options={['py-0', 'py-8', 'py-16', 'py-24', 'py-32', 'py-40', 'py-60']} />
+          <Select label="Horizontal Scale" value={data.px} onChange={(v) => update('px', v)} options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']} />
+        </ControlGroup>
+
+        <ControlGroup label="Container">
+          <Select label="Max Width" value={data.maxWidth} onChange={(v) => update('maxWidth', v)} options={['max-w-4xl', 'max-w-5xl', 'max-w-6xl', 'max-w-7xl', 'max-w-full']} />
+          {['features', 'logogrid', 'stats', 'cards'].includes(type) && (
+            <Input label="Grid Columns" type="number" value={data.columns} onChange={(v) => update('columns', parseInt(v))} />
+          )}
+        </ControlGroup>
+
+        {/* Alignment moved to QuickControls, enabling specific manual overrides here if needed, or remove to simplify */}
+
+        {type === 'image' && (
+          <ControlGroup label="Size">
+            <Input label="Height (px)" type="number" value={data.height} onChange={(v) => update('height', parseInt(v))} />
+            <div className="flex items-center gap-2 mt-2">
+              <input type="checkbox" checked={data.fullWidth} onChange={(e) => update('fullWidth', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
+              <span className="text-xs text-zinc-400">Full Width</span>
+            </div>
+          </ControlGroup>
+        )}
+      </InspectorSection>
+
+      {/* 3. STYLE SECTION */}
+      <InspectorSection title="Appearance" icon={ImageIcon2} isOpen={activeSection === 'Appearance'} onToggle={() => toggle('Appearance')}>
+        <ControlGroup label="Shape & Shadow">
+          <div className="grid grid-cols-2 gap-4">
+            <Select label="Radius" value={data.radius} onChange={(v) => update('radius', v)} options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-full']} />
+            <Select label="Shadow" value={data.shadow} onChange={(v) => update('shadow', v)} options={['shadow-none', 'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-2xl']} />
+          </div>
+        </ControlGroup>
+
+        <ControlGroup label="Animation">
+          <Select label="Entrance" value={data.animation || 'none'} onChange={(v) => update('animation', v)} options={['none', 'fadeUp', 'fadeDown', 'fadeIn', 'scaleUp', 'slideLeft', 'slideRight']} />
+        </ControlGroup>
+
+        <ControlGroup label="Custom Colors">
+          <Input label="Background" value={data.customBg} onChange={(v) => update('customBg', v)} placeholder="hex or rgba" />
+          <Input label="Text Color" value={data.customText} onChange={(v) => update('customText', v)} placeholder="hex or rgba" />
+        </ControlGroup>
+      </InspectorSection>
+
+    </div>
+  );
+}
+// Helper Components for Inspector
 function ControlGroup({ label, children }) {
   return (
-    <div className="space-y-4">
-      <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</h3>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest ml-1">{label}</h3>
+        {/* Optional: Add reset or indicator here */}
+      </div>
       <div className="space-y-3">{children}</div>
     </div>
   );
@@ -940,14 +1262,14 @@ function ControlGroup({ label, children }) {
 
 function Input({ label, value, onChange, placeholder }) {
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
+    <div className="space-y-1.5 group">
+      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white placeholder:text-zinc-700 font-medium"
+        className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 placeholder:text-zinc-700 font-medium"
       />
     </div>
   );
@@ -955,13 +1277,13 @@ function Input({ label, value, onChange, placeholder }) {
 
 function Textarea({ label, value, onChange, rows = 3 }) {
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
+    <div className="space-y-1.5 group">
+      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
-        className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white resize-none scrollbar-hide font-medium"
+        className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 resize-none scrollbar-hide font-medium leading-relaxed"
       />
     </div>
   );
@@ -969,15 +1291,18 @@ function Textarea({ label, value, onChange, rows = 3 }) {
 
 function Select({ label, value, onChange, options }) {
   return (
-    <div className="space-y-2">
-      <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1">{label}</label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-zinc-950 border border-white/5 rounded-xl px-4 py-3 text-xs focus:ring-1 focus:ring-indigo-500 outline-none transition-all text-white cursor-pointer"
-      >
-        {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-      </select>
+    <div className="space-y-1.5 group">
+      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 cursor-pointer appearance-none"
+        >
+          {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none group-hover:text-zinc-300 transition-colors" />
+      </div>
     </div>
   );
 }
@@ -1010,16 +1335,19 @@ function NavbarSection({ data, theme, onUpdate }) {
 }
 
 function HeroSection({ data, theme, onUpdate }) {
+  const alignClass = data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left';
+  const marginClass = data.align === 'center' ? 'mx-auto' : data.align === 'right' ? 'ml-auto' : 'mr-auto';
+
   return (
-    <div className={`${data.align === 'center' ? 'text-center' : 'text-left'}`}>
+    <div className={alignClass}>
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${data.align === 'center' ? 'mx-auto' : ''} ${theme.text}`}
+        className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${marginClass} ${theme.text}`}
       >
         <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
       </motion.h1>
-      <div className={`text-2xl mb-12 max-w-3xl ${data.align === 'center' ? 'mx-auto' : ''} leading-relaxed opacity-60 font-medium ${theme.text}`}>
+      <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text}`}>
         <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" />
       </div>
       <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
@@ -1352,13 +1680,12 @@ function FeaturesGridSection({ data, theme, onUpdate }) {
   return (
     <div className={`max-w-6xl mx-auto ${data.py}`}>
       <div
-        className={`grid gap-6 ${
-          data.columns === 4
-            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-            : data.columns === 2
+        className={`grid gap-6 ${data.columns === 4
+          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+          : data.columns === 2
             ? 'grid-cols-1 md:grid-cols-2'
             : 'grid-cols-1 md:grid-cols-3'
-        }`}
+          }`}
       >
         {data.items.map((item, idx) => (
           <div
@@ -1378,7 +1705,7 @@ function FeaturesGridSection({ data, theme, onUpdate }) {
             />
           </div>
         ))}
-      </div> 
+      </div>
     </div>
   );
 }
@@ -1393,11 +1720,10 @@ function StatsSection({ data, theme, onUpdate }) {
   return (
     <div className={`max-w-6xl mx-auto ${data.py}`}>
       <div
-        className={`grid gap-6 ${
-          data.layout === 'vertical'
-            ? 'grid-cols-1 md:grid-cols-4'
-            : 'grid-cols-1 md:grid-cols-3'
-        }`}
+        className={`grid gap-6 ${data.layout === 'vertical'
+          ? 'grid-cols-1 md:grid-cols-4'
+          : 'grid-cols-1 md:grid-cols-3'
+          }`}
       >
         {data.stats.map((stat, idx) => (
           <div
@@ -1445,9 +1771,8 @@ function CTASection({ data, theme, onUpdate }) {
         />
 
         <button
-          className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-            theme.accent || 'bg-indigo-600 text-white'
-          }`}
+          className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
+            }`}
         >
           <EditableText
             value={data.button}
@@ -1474,9 +1799,8 @@ function ImageSection({ data, theme, onUpdate }) {
           <img
             src={data.url}
             alt={data.caption || 'Image'}
-            className={`w-full object-cover ${
-              data.fullWidth ? 'h-auto' : `h-[${data.height}px]`
-            }`}
+            className={`w-full object-cover ${data.fullWidth ? 'h-auto' : `h-[${data.height}px]`
+              }`}
           />
         ) : (
           <div className="h-64 flex items-center justify-center opacity-40 text-sm">
