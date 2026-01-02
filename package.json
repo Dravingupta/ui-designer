@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "@google/gemini-cli": "^0.22.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  },
+  "name": "ui-designer",
+  "version": "1.0.0",
+  "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dravingupta/ui-designer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Dravingupta/ui-designer/issues"
+  },
+  "homepage": "https://github.com/Dravingupta/ui-designer#readme"
+}

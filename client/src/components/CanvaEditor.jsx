@@ -15,9 +15,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check , DollarSign , Mail , MessageSquare , HelpCircle,Grid , BarChart3 , Megaphone , ImageIcon} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
+// IMPORT NEW COMPONENTS 
+
 
 // Theme definitions
 const themes = {
@@ -109,18 +111,40 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     }
   };
 
+  // const addElement = (type) => {
+  //   const newElement = {
+  //     id: `${type}-${Date.now()}`,
+  //     type,
+  //     data: getDefaultData(type)
+  //   };
+  //   setState(prev => ({
+  //     ...prev,
+  //     layout: [...prev.layout, newElement],
+  //     selectedSectionId: newElement.id
+  //   }));
+  // };
   const addElement = (type) => {
-    const newElement = {
-      id: `${type}-${Date.now()}`,
-      type,
-      data: getDefaultData(type)
-    };
-    setState(prev => ({
+  console.log("🟢 ADD ELEMENT CLICKED:", type);
+
+  const newElement = {
+    id: `${type}-${Date.now()}`,
+    type,
+    data: getDefaultData(type),
+  };
+
+  console.log("🟢 NEW ELEMENT OBJECT:", newElement);
+
+  setState(prev => {
+    const next = {
       ...prev,
       layout: [...prev.layout, newElement],
-      selectedSectionId: newElement.id
-    }));
-  };
+      selectedSectionId: newElement.id,
+    };
+    console.log("🟢 NEW LAYOUT:", next.layout);
+    return next;
+  });
+};
+
 
   const getDefaultData = (type) => {
     const common = {
@@ -148,10 +172,12 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       buttons: { ...common, buttons: [{ label: 'Action 1' }, { label: 'Action 2' }], align: 'center', py: 'py-12' },
       features: { ...common, items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
       stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], layout: 'horizontal', py: 'py-16' },
-      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', align: 'center' },
+      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', align: 'center' , py: 'py-24' },
       faq: { ...common, items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
       divider: { ...common, height: 'md', showLine: true, py: 'py-0' },
-      footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', align: 'center', py: 'py-12' }
+      footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', align: 'center', py: 'py-12' },
+      timeline: { ...common , items: [{title: 'Step 1', description: 'Describe the first step.' },{ title: 'Step 1', description: 'Describe the first step.' },{ title: 'Step 3', description: 'Describe the third step.' }] ,align: 'left',py: 'py-16' },
+      
     };
     return defaults[type] || { ...common };
   };
@@ -288,6 +314,14 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                 <ElementButton onClick={() => addElement('cards')} label="Grid Cards" icon={<Layout className="w-4 h-4" />} />
                 <ElementButton onClick={() => addElement('cta')} label="Call to Action" icon={<Plus className="w-4 h-4" />} />
                 <ElementButton onClick={() => addElement('footer')} label="Footer" icon={<Trash2 className="w-4 h-4" />} />
+                <ElementButton onClick={() => addElement('timeline')} label="Timeline" icon={<Layers className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('pricing')} label="pricing" icon={<DollarSign className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('contact')} label="Contact" icon={<Mail className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('testimonial')} label="Testimonial" icon={<MessageSquare className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('faq')} label="FAQ's" icon={<HelpCircle className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('features')} label="Features" icon={<Grid className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('stats')} label="Stats" icon={<BarChart3 className="w-4 h-4" />}/>
+                <ElementButton onClick={() => addElement('image')} label="Image" icon={<ImageIcon className="w-4 h-4" />}/>
               </div>
             </div>
 
@@ -508,12 +542,17 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
     video: VideoSection,
     buttons: ButtonsSection,
     features: FeaturesSection,
-    stats: StatsSection,
-    cta: CTASection,
+   
     faq: FAQSection,
     divider: DividerSection,
     footer: FooterSection,
-  };
+    // ADDED COMPONENT
+    timeline: TimelineSection,
+    
+    stats: StatsSection,
+    cta: CTASection,
+    
+  };  
 
   const Component = components[type] || (({ type, theme }) => (
     <div className={`py-16 px-12 text-center border-y border-dashed ${theme.border} opacity-50`}>
@@ -1016,18 +1055,6 @@ function TextSection({ data, theme, onUpdate }) {
   );
 }
 
-function ImageSection({ data, theme, onUpdate }) {
-  return (
-    <div className={`${data.fullWidth ? 'w-full' : 'w-full mx-auto'}`}>
-      <img src={data.url || 'https://via.placeholder.com/800x400'} alt={data.caption} className="w-full rounded-2xl shadow-xl object-cover" style={{ height: data.height || 400 }} />
-      {data.caption && (
-        <div className={`mt-4 text-xs font-bold uppercase tracking-widest opacity-40 text-center ${theme.text}`}>
-          <EditableText value={data.caption} onChange={(v) => onUpdate({ ...data, caption: v })} />
-        </div>
-      )}
-    </div>
-  );
-}
 
 function CardsSection({ data, theme, onUpdate }) {
   return (
@@ -1234,48 +1261,6 @@ function FeaturesSection({ data, theme, onUpdate }) {
   );
 }
 
-function StatsSection({ data, theme, onUpdate }) {
-  return (
-    <div className={`flex ${data.layout === 'horizontal' ? 'flex-row justify-around' : 'flex-col gap-12 items-center'} flex-wrap gap-8`}>
-      {data.stats.map((stat, i) => (
-        <div key={i} className="text-center">
-          <div className={`text-6xl font-black mb-2 tracking-tighter ${theme.text}`}>
-            <EditableText value={stat.value} onChange={(v) => {
-              const newStats = [...data.stats];
-              newStats[i].value = v;
-              onUpdate({ ...data, stats: newStats });
-            }} />
-          </div>
-          <div className="text-[10px] font-bold uppercase tracking-widest opacity-40">
-            <EditableText value={stat.label} onChange={(v) => {
-              const newStats = [...data.stats];
-              newStats[i].label = v;
-              onUpdate({ ...data, stats: newStats });
-            }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CTASection({ data, theme, onUpdate }) {
-  return (
-    <div className={`${data.align === 'center' ? 'text-center' : 'text-left'}`}>
-      <div className={`max-w-5xl ${data.align === 'center' ? 'mx-auto' : ''} p-16 rounded-[40px] bg-indigo-600 text-white shadow-2xl shadow-indigo-600/20`}>
-        <h2 className="text-6xl font-black mb-6 tracking-tighter">
-          <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
-        </h2>
-        <div className="text-xl opacity-80 mb-10 max-w-2xl mx-auto">
-          <EditableText value={data.supportingText} onChange={(v) => onUpdate({ ...data, supportingText: v })} type="textarea" />
-        </div>
-        <button className="px-12 py-5 bg-white text-indigo-600 text-sm font-black uppercase tracking-widest rounded-2xl hover:scale-105 transition-all shadow-xl">
-          <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function FAQSection({ data, theme, onUpdate }) {
   return (
@@ -1316,6 +1301,197 @@ function FooterSection({ data, theme, onUpdate }) {
     <div className={`text-center opacity-50`}>
       <div className={`text-xs font-bold uppercase tracking-widest ${theme.text}`}>
         <EditableText value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} />
+      </div>
+    </div>
+  );
+}
+// ADDING COMPONENT
+function TimelineSection({ data, theme, onUpdate }) {
+  return (
+    <div className={`${data.py}`}>
+      <div className="space-y-6">
+        {data.items.map((item, idx) => (
+          <div key={idx} className="flex gap-4">
+            <div className={`font-bold ${theme.text}`}>
+              {idx + 1}.
+            </div>
+            <div>
+              <EditableText
+                value={item.title}
+                onChange={(v) => {
+                  const items = [...data.items];
+                  items[idx].title = v;
+                  onUpdate({ ...data, items });
+                }}
+                className={`text-lg font-semibold ${theme.text}`}
+              />
+              <EditableText
+                value={item.description}
+                onChange={(v) => {
+                  const items = [...data.items];
+                  items[idx].description = v;
+                  onUpdate({ ...data, items });
+                }}
+                className={`opacity-70 ${theme.text}`}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FeaturesGridSection({ data, theme, onUpdate }) {
+  const updateItem = (index, key, value) => {
+    const items = [...data.items];
+    items[index] = { ...items[index], [key]: value };
+    onUpdate({ ...data, items });
+  };
+
+  return (
+    <div className={`max-w-6xl mx-auto ${data.py}`}>
+      <div
+        className={`grid gap-6 ${
+          data.columns === 4
+            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+            : data.columns === 2
+            ? 'grid-cols-1 md:grid-cols-2'
+            : 'grid-cols-1 md:grid-cols-3'
+        }`}
+      >
+        {data.items.map((item, idx) => (
+          <div
+            key={idx}
+            className={`p-8 rounded-3xl border ${theme.secondary} ${theme.border}`}
+          >
+            <EditableText
+              value={item.title}
+              onChange={(v) => updateItem(idx, 'title', v)}
+              className={`text-lg font-bold mb-2 ${theme.text}`}
+            />
+
+            <EditableText
+              value={item.description}
+              onChange={(v) => updateItem(idx, 'description', v)}
+              className={`text-sm opacity-70 ${theme.text}`}
+            />
+          </div>
+        ))}
+      </div> 
+    </div>
+  );
+}
+
+function StatsSection({ data, theme, onUpdate }) {
+  const updateStat = (index, key, value) => {
+    const stats = [...data.stats];
+    stats[index] = { ...stats[index], [key]: value };
+    onUpdate({ ...data, stats });
+  };
+
+  return (
+    <div className={`max-w-6xl mx-auto ${data.py}`}>
+      <div
+        className={`grid gap-6 ${
+          data.layout === 'vertical'
+            ? 'grid-cols-1 md:grid-cols-4'
+            : 'grid-cols-1 md:grid-cols-3'
+        }`}
+      >
+        {data.stats.map((stat, idx) => (
+          <div
+            key={idx}
+            className={`p-8 rounded-3xl border text-center ${theme.secondary} ${theme.border}`}
+          >
+            <EditableText
+              value={stat.value}
+              onChange={(v) => updateStat(idx, 'value', v)}
+              className={`text-4xl font-black mb-2 ${theme.text}`}
+            />
+
+            <EditableText
+              value={stat.label}
+              onChange={(v) => updateStat(idx, 'label', v)}
+              className={`text-xs uppercase tracking-widest opacity-60 ${theme.text}`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CTASection({ data, theme, onUpdate }) {
+  const updateField = (key, value) => {
+    onUpdate({ ...data, [key]: value });
+  };
+
+  return (
+    <div className={`max-w-5xl mx-auto ${data.py}`}>
+      <div
+        className={`p-12 rounded-3xl text-center border ${theme.secondary} ${theme.border}`}
+      >
+        <EditableText
+          value={data.heading}
+          onChange={(v) => updateField('heading', v)}
+          className={`text-3xl font-black mb-4 ${theme.text}`}
+        />
+
+        <EditableText
+          value={data.supportingText}
+          onChange={(v) => updateField('supportingText', v)}
+          className={`text-sm opacity-70 mb-8 ${theme.text}`}
+        />
+
+        <button
+          className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
+            theme.accent || 'bg-indigo-600 text-white'
+          }`}
+        >
+          <EditableText
+            value={data.button}
+            onChange={(v) => updateField('button', v)}
+            className="outline-none"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ImageSection({ data, theme, onUpdate }) {
+  const updateField = (key, value) => {
+    onUpdate({ ...data, [key]: value });
+  };
+
+  return (
+    <div className={`max-w-6xl mx-auto ${data.py}`}>
+      <div
+        className={`rounded-3xl border overflow-hidden ${theme.secondary} ${theme.border}`}
+      >
+        {data.url ? (
+          <img
+            src={data.url}
+            alt={data.caption || 'Image'}
+            className={`w-full object-cover ${
+              data.fullWidth ? 'h-auto' : `h-[${data.height}px]`
+            }`}
+          />
+        ) : (
+          <div className="h-64 flex items-center justify-center opacity-40 text-sm">
+            No image selected
+          </div>
+        )}
+
+        {data.caption && (
+          <div className={`p-4 text-center text-sm opacity-60 ${theme.text}`}>
+            <EditableText
+              value={data.caption}
+              onChange={(v) => updateField('caption', v)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
