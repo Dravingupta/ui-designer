@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import { useRef } from 'react'; // Added useRef explicitly if not present
@@ -100,6 +100,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const [activeSection, setActiveSection] = useState('Content');
   const [searchQuery, setSearchQuery] = useState('');
   const [previewMode, setPreviewMode] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
@@ -326,6 +327,24 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
               className="bg-transparent font-semibold focus:outline-none hover:bg-white/5 px-2 py-1 rounded transition-all w-48 text-sm"
               placeholder="Design Name"
             />
+
+          </div>
+
+          <div className="flex bg-[#0F0F0F] rounded-lg p-1 border border-white/5">
+            <button
+              onClick={() => setIsMobileView(false)}
+              className={`p-1.5 rounded transition-all ${!isMobileView ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              title="Desktop View"
+            >
+              <Monitor className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setIsMobileView(true)}
+              className={`p-1.5 rounded transition-all ${isMobileView ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+              title="Mobile View"
+            >
+              <Smartphone className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex items-center gap-2">
@@ -386,8 +405,8 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       <div className={`flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}>
         {/* Left Sidebar - Nav Rail + Drawer */}
         {!previewMode && (
-          // Container is now RELATIVE and only takes up the width of the Rail (w-20) in the flow
-          <div className="relative flex h-full shrink-0 z-40 w-20">
+          // Web: Fixed w-20 (Overlay). Mobile: Expands (Push)
+          <div className={`relative flex h-full shrink-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${isMobileView && activeTab ? 'w-[25rem]' : 'w-20'}`}>
             {/* 1. Navigation Rail (Fixed Icons) */}
             <div className="w-20 bg-[#050505] border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
               <NavRailButton
@@ -551,7 +570,10 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         )}
 
         {/* Center Canvas */}
-        <main className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-[#050505] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]'}`}>
+        <main
+          onClick={() => !isMobileView && activeTab && setActiveTab(null)}
+          className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-[#050505] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]'}`}
+        >
 
           {/* Zoom Bar */}
           {!previewMode && <ZoomBar zoom={zoom} onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />}
@@ -560,8 +582,9 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               className={`
-                   transition-all duration-200 ease-out
-                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh] w-full max-w-6xl'}
+                   transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]
+                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh]'}
+                   ${isMobileView && !previewMode ? 'w-[375px] max-w-[375px] border-[8px] border-[#1a1a1a] rounded-[2.5rem] overflow-hidden ring-4 ring-black/20' : 'w-full max-w-6xl'}
                    ${currentTheme.bg}
                 `}
             >
@@ -590,6 +613,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                         onSelect={() => selectSection(element.id)}
                         theme={currentTheme}
                         previewMode={previewMode}
+                        isMobileView={isMobileView && !previewMode}
                       />
                     ))}
                   </SortableContext>
@@ -752,7 +776,7 @@ function ElementCard({ onClick, label, icon, desc }) {
   );
 }
 
-function SortableSection({ element, isSelected, onSelect, theme, previewMode }) {
+function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: element.id, disabled: previewMode });
 
   const style = {
@@ -784,12 +808,13 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode }) 
         theme={theme}
         onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
         isSelected={isSelected && !previewMode}
+        isMobileView={isMobileView}
       />
     </div>
   );
 }
 
-const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
+const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView }) => {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
@@ -838,7 +863,12 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
     slideRight: { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
   };
 
-  const anim = animations[data.animation] || animations.none;
+  // Mobile Override Logic
+  const displayData = isMobileView
+    ? { ...data, py: 'py-12', px: 'px-4' }
+    : data;
+
+  const anim = animations[displayData.animation] || animations.none;
 
   return (
     <motion.div
@@ -847,10 +877,10 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
       viewport={{ once: true }}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       style={customStyle}
-      className={`${data.py} ${data.px}`}
+      className={`${displayData.py} ${displayData.px}`}
     >
-      <div className={`${data.maxWidth} mx-auto ${data.radius} ${data.shadow}`}>
-        <Component data={data} theme={theme} type={type} onUpdate={onUpdate} isSelected={isSelected} />
+      <div className={`${displayData.maxWidth} mx-auto ${displayData.radius} ${displayData.shadow}`}>
+        <Component data={displayData} theme={theme} type={type} onUpdate={onUpdate} isSelected={isSelected} isMobileView={isMobileView} />
       </div>
     </motion.div>
   );
@@ -1451,15 +1481,15 @@ function Select({ label, value, onChange, options }) {
 }
 
 // Render Components
-function NavbarSection({ data, theme, onUpdate }) {
+function NavbarSection({ data, theme, onUpdate, isMobileView }) {
   return (
-    <div className={`flex items-center justify-between`}>
+    <div className={`flex ${isMobileView ? 'flex-col gap-4 text-center' : 'items-center justify-between'}`}>
       <EditableText
         value={data.logo}
         onChange={(v) => onUpdate({ ...data, logo: v })}
         className={`text-2xl font-black tracking-tighter ${theme.text}`}
       />
-      <div className="flex gap-10">
+      <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'gap-10'}`}>
         {data.links?.map((link, idx) => (
           <EditableText
             key={idx}
@@ -1527,9 +1557,9 @@ function TextSection({ data, theme, onUpdate }) {
 }
 
 
-function CardsSection({ data, theme, onUpdate }) {
+function CardsSection({ data, theme, onUpdate, isMobileView }) {
   return (
-    <div className={`grid gap-8 ${data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+    <div className={`grid gap-8 ${isMobileView ? 'grid-cols-1' : (data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4')}`}>
       {Array(data.count).fill(0).map((_, i) => (
         <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02]`}>
           <div className="h-48 mb-6 overflow-hidden rounded-2xl">
@@ -1588,9 +1618,9 @@ function TestimonialsSection({ data, theme, onUpdate }) {
   );
 }
 
-function PricingSection({ data, theme, onUpdate }) {
+function PricingSection({ data, theme, onUpdate, isMobileView }) {
   return (
-    <div className="grid grid-cols-2 gap-8 max-w-4xl mx-auto">
+    <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
       {data.plans.map((plan, i) => (
         <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary}`}>
           <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text}`}>
@@ -1626,13 +1656,13 @@ function PricingSection({ data, theme, onUpdate }) {
   );
 }
 
-function ContactSection({ data, theme, onUpdate }) {
+function ContactSection({ data, theme, onUpdate, isMobileView }) {
   return (
     <div className="max-w-4xl mx-auto text-center">
       <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
         <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
       </h2>
-      <div className="grid grid-cols-3 gap-12">
+      <div className={`grid ${isMobileView ? 'grid-cols-1 gap-8' : 'grid-cols-3 gap-12'}`}>
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Email</p>
           <div className={`text-sm font-bold ${theme.text}`}>
@@ -1656,10 +1686,10 @@ function ContactSection({ data, theme, onUpdate }) {
   );
 }
 
-function LogoGridSection({ data, theme, onUpdate }) {
+function LogoGridSection({ data, theme, onUpdate, isMobileView }) {
   const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4', 5: 'grid-cols-5', 6: 'grid-cols-6' };
   return (
-    <div className={`grid ${colMap[data.columns] || 'grid-cols-4'} gap-12 items-center`}>
+    <div className={`grid ${isMobileView ? 'grid-cols-2 gap-8' : (colMap[data.columns] || 'grid-cols-4 gap-12')} items-center`}>
       {data.logos.map((logo, i) => (
         <div key={i} className="relative group/logo">
           <img src={logo} className="w-full opacity-40 grayscale group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all cursor-pointer" alt="Client Logo" />
@@ -1687,9 +1717,9 @@ function VideoSection({ data, theme, onUpdate }) {
   );
 }
 
-function ButtonsSection({ data, theme, onUpdate }) {
+function ButtonsSection({ data, theme, onUpdate, isMobileView }) {
   return (
-    <div className={`flex gap-6 ${data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex gap-6 ${isMobileView ? 'flex-col items-center' : (data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start')}`}>
       {data.buttons.map((btn, i) => (
         <button key={i} className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
           <EditableText value={btn.label} onChange={(v) => {
@@ -1703,10 +1733,10 @@ function ButtonsSection({ data, theme, onUpdate }) {
   );
 }
 
-function FeaturesSection({ data, theme, onUpdate }) {
+function FeaturesSection({ data, theme, onUpdate, isMobileView }) {
   const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' };
   return (
-    <div className={`grid ${colMap[data.columns] || 'grid-cols-3'} gap-16`}>
+    <div className={`grid ${isMobileView ? 'grid-cols-1' : (colMap[data.columns] || 'grid-cols-3')} gap-16`}>
       {data.items.map((item, i) => (
         <div key={i} className="space-y-4">
           <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500">
