@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import { useRef } from 'react'; // Added useRef explicitly if not present
@@ -939,11 +939,18 @@ function QuickControls({ type, data, onUpdate }) {
       <div className="flex items-center gap-2">
         <button
           className="h-full px-3 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 rounded text-gray-500 hover:text-white transition-colors gap-2 w-full"
-          title="Reset Spacing"
-          onClick={() => onUpdate({ ...data, py: 'py-20', px: 'px-8' })}
+          title="Cycle Vertical Spacing"
+          onClick={() => {
+            const levels = ['py-12', 'py-24', 'py-48'];
+            const current = levels.includes(data.py) ? data.py : 'py-24';
+            const next = levels[(levels.indexOf(current) + 1) % levels.length];
+            onUpdate({ ...data, py: next });
+          }}
         >
-          <Layout className="w-3.5 h-3.5" />
-          <span className="text-[10px] font-bold font-mono uppercase">Default_Layout</span>
+          <ChevronsUpDown className="w-3.5 h-3.5" />
+          <span className="text-[10px] font-bold font-mono uppercase">
+            {data.py === 'py-12' ? 'Compact' : data.py === 'py-48' ? 'Relaxed' : 'Normal'}
+          </span>
         </button>
       </div>
     </div>
