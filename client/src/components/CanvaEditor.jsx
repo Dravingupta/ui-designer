@@ -1220,17 +1220,120 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           </div>
         )}
 
+        {type === 'logogrid' && (
+          <div className="space-y-4">
+            <ControlGroup label="Logo Items">
+              {data.logos.map((url, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <Input
+                    label={`Logo ${i + 1}`}
+                    value={url}
+                    onChange={(v) => {
+                      const newLogos = [...data.logos];
+                      newLogos[i] = v;
+                      update('logos', newLogos);
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      const newLogos = data.logos.filter((_, idx) => idx !== i);
+                      update('logos', newLogos);
+                    }}
+                    className="mt-4 p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => update('logos', [...data.logos, 'https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'])}
+                className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2 block mt-2"
+              >
+                + Add Logo
+              </button>
+            </ControlGroup>
+            <ControlGroup label="Grid Config">
+              <Input label="Columns" type="number" value={data.columns} onChange={(v) => update('columns', parseInt(v))} />
+            </ControlGroup>
+          </div>
+        )
+        }
+
+        {
+          type === 'cta' && (
+            <ControlGroup label="Call to Action">
+              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+              <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => update('supportingText', v)} rows={3} />
+              <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
+            </ControlGroup>
+          )
+        }
+
+        {
+          type === 'contact' && (
+            <ControlGroup label="Contact Info">
+              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+              <Input label="Email" value={data.email} onChange={(v) => update('email', v)} />
+              <Input label="Phone" value={data.phone} onChange={(v) => update('phone', v)} />
+              <Textarea label="Address" value={data.address} onChange={(v) => update('address', v)} rows={2} />
+            </ControlGroup>
+          )
+        }
+
+        {
+          type === 'faq' && (
+            <div className="space-y-4">
+              {data.items.map((item, i) => (
+                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+                  <Input label="Question" value={item.question} onChange={(v) => {
+                    const newItems = [...data.items];
+                    newItems[i] = { ...item, question: v };
+                    update('items', newItems);
+                  }} />
+                  <Textarea label="Answer" value={item.answer} onChange={(v) => {
+                    const newItems = [...data.items];
+                    newItems[i] = { ...item, answer: v };
+                    update('items', newItems);
+                  }} rows={3} />
+                  <button
+                    onClick={() => {
+                      const newItems = data.items.filter((_, idx) => idx !== i);
+                      update('items', newItems);
+                    }}
+                    className="text-[10px] text-red-500 hover:text-red-400 font-bold uppercase"
+                  >
+                    Remove Item
+                  </button>
+                </div>
+              ))}
+              <button onClick={() => update('items', [...data.items, { question: 'New Question', answer: 'New Answer' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add FAQ Item</button>
+            </div>
+          )
+        }
+
+        {
+          type === 'footer' && (
+            <ControlGroup label="Footer Content">
+              <Input label="Copyright Text" value={data.text} onChange={(v) => update('text', v)} />
+            </ControlGroup>
+          )
+        }
+
         {/* Fallback for simple inputs if not explicitly handled above but common */}
-        {data.heading !== undefined && !['hero', 'richtext', 'cta', 'contact', 'video'].includes(type) && (
-          <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
-        )}
-        {data.text !== undefined && type !== 'footer' && (
-          <Input label="Text" value={data.text} onChange={(v) => update('text', v)} />
-        )}
-      </InspectorSection>
+        {
+          data.heading !== undefined && !['hero', 'richtext', 'cta', 'contact', 'video'].includes(type) && (
+            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+          )
+        }
+        {
+          data.text !== undefined && type !== 'footer' && (
+            <Input label="Text" value={data.text} onChange={(v) => update('text', v)} />
+          )
+        }
+      </InspectorSection >
 
       {/* 2. LAYOUT SECTION */}
-      <InspectorSection title="Layout" icon={Layout} isOpen={activeSection === 'Layout'} onToggle={() => toggle('Layout')}>
+      < InspectorSection title="Layout" icon={Layout} isOpen={activeSection === 'Layout'} onToggle={() => toggle('Layout')}>
         <ControlGroup label="Spacing">
           <Select label="Vertical Scale" value={data.py} onChange={(v) => update('py', v)} options={['py-0', 'py-8', 'py-16', 'py-24', 'py-32', 'py-40', 'py-60']} />
           <Select label="Horizontal Scale" value={data.px} onChange={(v) => update('px', v)} options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']} />
@@ -1245,19 +1348,21 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
 
         {/* Alignment moved to QuickControls, enabling specific manual overrides here if needed, or remove to simplify */}
 
-        {type === 'image' && (
-          <ControlGroup label="Size">
-            <Input label="Height (px)" type="number" value={data.height} onChange={(v) => update('height', parseInt(v))} />
-            <div className="flex items-center gap-2 mt-2">
-              <input type="checkbox" checked={data.fullWidth} onChange={(e) => update('fullWidth', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
-              <span className="text-xs text-zinc-400">Full Width</span>
-            </div>
-          </ControlGroup>
-        )}
-      </InspectorSection>
+        {
+          type === 'image' && (
+            <ControlGroup label="Size">
+              <Input label="Height (px)" type="number" value={data.height} onChange={(v) => update('height', parseInt(v))} />
+              <div className="flex items-center gap-2 mt-2">
+                <input type="checkbox" checked={data.fullWidth} onChange={(e) => update('fullWidth', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
+                <span className="text-xs text-zinc-400">Full Width</span>
+              </div>
+            </ControlGroup>
+          )
+        }
+      </InspectorSection >
 
       {/* 3. STYLE SECTION */}
-      <InspectorSection title="Appearance" icon={ImageIcon2} isOpen={activeSection === 'Appearance'} onToggle={() => toggle('Appearance')}>
+      < InspectorSection title="Appearance" icon={ImageIcon2} isOpen={activeSection === 'Appearance'} onToggle={() => toggle('Appearance')}>
         <ControlGroup label="Shape & Shadow">
           <div className="grid grid-cols-2 gap-4">
             <Select label="Radius" value={data.radius} onChange={(v) => update('radius', v)} options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-full']} />
@@ -1273,9 +1378,9 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           <Input label="Background" value={data.customBg} onChange={(v) => update('customBg', v)} placeholder="hex or rgba" />
           <Input label="Text Color" value={data.customText} onChange={(v) => update('customText', v)} placeholder="hex or rgba" />
         </ControlGroup>
-      </InspectorSection>
+      </InspectorSection >
 
-    </div>
+    </div >
   );
 }
 // Helper Components for Inspector
