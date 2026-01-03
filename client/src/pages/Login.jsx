@@ -21,9 +21,9 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white p-6">
       {/* Background Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 blur-[120px] rounded-full"></div>
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 bg-[#0A0A0A]">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-600/10 blur-[120px] rounded-full"></div>
       </div>
 
       <motion.div
@@ -31,27 +31,27 @@ const Login = () => {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+        <div className="bg-[#0F0F0F] border border-white/5 p-8 rounded shadow-2xl">
           <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-indigo-600 rounded-2xl mb-4 shadow-lg shadow-indigo-600/40">
-              <LogIn className="w-8 h-8 text-white" />
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-cyan-900/20 border border-cyan-500/30 rounded mb-4">
+              <LogIn className="w-5 h-5 text-cyan-400" />
             </div>
-            <h1 className="text-3xl font-bold">Welcome Back</h1>
-            <p className="text-slate-400 mt-2">Sign in to access your projects</p>
+            <h1 className="text-2xl font-bold font-mono uppercase tracking-wide">Access_Terminal</h1>
+            <p className="text-gray-500 mt-2 font-mono text-xs">Verify credentials to proceed.</p>
           </div>
 
           <div className="space-y-6">
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-3 rounded-xl text-sm text-center">
+              <div className="bg-red-900/20 border border-red-500/30 text-red-400 p-3 rounded font-mono text-xs text-center">
                 {error}
               </div>
             )}
 
             <button
               onClick={handleGoogleLogin}
-              className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold py-3 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2"
+              className="w-full bg-white text-black hover:bg-gray-200 font-bold py-3 rounded transition-all shadow-lg flex items-center justify-center gap-3 font-mono text-sm uppercase"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" viewBox="0 0 24 24">
                 <path
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                   fill="#4285F4"
@@ -69,7 +69,7 @@ const Login = () => {
                   fill="#EA4335"
                 />
               </svg>
-              Sign in with Google
+              Authenticate_Google
             </button>
           </div>
         </div>

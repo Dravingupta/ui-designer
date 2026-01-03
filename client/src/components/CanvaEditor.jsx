@@ -25,7 +25,7 @@ import { useRef } from 'react'; // Added useRef explicitly if not present
 // Theme definitions
 const themes = {
   light: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-black text-white hover:bg-black/90', secondary: 'bg-gray-100', muted: 'text-gray-600' },
-  dark: { bg: 'bg-zinc-950', text: 'text-white', border: 'border-zinc-800', accent: 'bg-white text-black hover:bg-white/90', secondary: 'bg-zinc-900', muted: 'text-zinc-400' },
+  dark: { bg: 'bg-[#0A0A0A]', text: 'text-gray-200', border: 'border-white/5', accent: 'bg-white text-black hover:bg-gray-200', secondary: 'bg-[#0F0F0F]', muted: 'text-gray-500' },
   gray: { bg: 'bg-gray-50', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-gray-900 text-white hover:bg-black', secondary: 'bg-gray-200', muted: 'text-gray-600' },
   blue: { bg: 'bg-blue-50', text: 'text-blue-950', border: 'border-blue-200', accent: 'bg-blue-600 text-white hover:bg-blue-700', secondary: 'bg-blue-100', muted: 'text-blue-700' },
   indigo: { bg: 'bg-indigo-50', text: 'text-indigo-950', border: 'border-indigo-200', accent: 'bg-indigo-600 text-white hover:bg-indigo-700', secondary: 'bg-indigo-100', muted: 'text-indigo-700' },
@@ -302,10 +302,10 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const currentTheme = themes[state.theme];
 
   return (
-    <div className="h-screen bg-zinc-950 flex flex-col text-zinc-100 selection:bg-indigo-500/30 overflow-hidden">
+    <div className="h-screen bg-[#0A0A0A] flex flex-col text-gray-200 selection:bg-cyan-500/30 overflow-hidden font-sans">
       {/* Premium Header */}
       {!previewMode && (
-        <header className="bg-zinc-900/50 backdrop-blur-xl border-b border-white/5 px-6 py-3 flex items-center justify-between z-50">
+        <header className="bg-[#0A0A0A]/50 backdrop-blur-md border-b border-white/5 px-6 py-3 flex items-center justify-between z-50">
           <div className="flex items-center gap-4">
             <button
               onClick={onBack}
@@ -329,25 +329,25 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${isSaving ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 hover:bg-white/10'}`}
+              className={`flex items-center gap-2 px-4 py-2 rounded text-xs font-bold transition-all font-mono uppercase tracking-wide text-[10px] ${isSaving ? 'bg-cyan-500/20 text-cyan-400' : 'bg-white/5 hover:bg-white/10'}`}
             >
               <Save className={`w-4 h-4 ${isSaving ? 'animate-pulse' : ''}`} />
-              {isSaving ? 'Saving...' : 'Save'}
+              {isSaving ? 'SAVING...' : 'SAVE'}
             </button>
             <button
               onClick={() => setPreviewMode(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-semibold transition-all"
+              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded text-xs font-bold transition-all font-mono uppercase tracking-wide text-[10px]"
             >
               <Eye className="w-4 h-4" />
-              Preview
+              PREVIEW
             </button>
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className={`flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-lg shadow-indigo-600/20 transition-all active:scale-95 ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded font-bold shadow-lg shadow-cyan-600/20 transition-all active:scale-95 font-mono uppercase tracking-wide text-[10px] ${isExporting ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
-              {isExporting ? 'Generating ZIP...' : 'Export ZIP'}
+              {isExporting ? 'COMPILING...' : 'EXPORT_BUILD'}
             </button>
           </div>
         </header>
@@ -384,7 +384,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
           // Container is now RELATIVE and only takes up the width of the Rail (w-20) in the flow
           <div className="relative flex h-full shrink-0 z-40 w-20">
             {/* 1. Navigation Rail (Fixed Icons) */}
-            <div className="w-20 bg-zinc-950 border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
+            <div className="w-20 bg-[#050505] border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
               <NavRailButton
                 active={activeTab === 'components'}
                 onClick={() => setActiveTab(activeTab === 'components' ? null : 'components')}
@@ -402,17 +402,17 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
             {/* 2. Drawer Panel (Absolute Overlay) */}
             <div className={`
                 absolute top-0 left-20 h-full
-                bg-zinc-900 border-r border-white/5 flex flex-col 
+                bg-[#0F0F0F] border-r border-white/5 flex flex-col 
                 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] 
                 overflow-hidden shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)] z-30
                 ${activeTab ? 'w-80 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
              `}>
               {/* Content Container - Fixed Width to prevent internal squashing */}
-              <div className="flex flex-col h-full w-80 min-w-[20rem] bg-zinc-900">
+              <div className="flex flex-col h-full w-80 min-w-[20rem] bg-[#0F0F0F]">
                 {activeTab === 'components' && (
                   <>
                     {/* Search Header */}
-                    <div className="p-5 border-b border-white/5 bg-zinc-900 sticky top-0 z-20 space-y-4">
+                    <div className="p-5 border-b border-white/5 bg-[#0F0F0F] sticky top-0 z-20 space-y-4">
                       <div>
                         <h2 className="text-sm font-bold text-white">Elements</h2>
                         <p className="text-[10px] text-zinc-500 mt-1">Drag and drop components to build</p>
@@ -493,7 +493,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
                 {activeTab === 'themes' && (
                   <>
-                    <div className="p-5 border-b border-white/5 bg-zinc-900 sticky top-0 z-10">
+                    <div className="p-5 border-b border-white/5 bg-[#0F0F0F] sticky top-0 z-10">
                       <h2 className="text-sm font-bold text-white">Design System</h2>
                       <p className="text-[10px] text-zinc-500 mt-1">Global styling and color palettes</p>
                     </div>
@@ -503,7 +503,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                           <button
                             key={name}
                             onClick={() => setTheme(name)}
-                            className={`p-3 rounded-xl transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-indigo-500 ring-1 ring-indigo-500/50 bg-indigo-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
+                            className={`p-3 rounded transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-cyan-500 ring-1 ring-cyan-500/50 bg-cyan-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
                           >
                             <span className={`block mb-2 w-4 h-4 rounded-full ${themes[name].accent.split(' ')[0]}`}></span>
                             <span className="text-zinc-300 group-hover:text-white transition-colors">{name}</span>
@@ -519,17 +519,17 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         )}
 
         {/* Center Canvas */}
-        <main className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-zinc-950 bg-[radial-gradient(#ffffff1a_1px,transparent_1px)] [background-size:16px_16px]'}`}>
+        <main className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-[#050505] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]'}`}>
 
           {/* Zoom Bar */}
           {!previewMode && <ZoomBar zoom={zoom} onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />}
 
-          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent flex items-start justify-center">
+          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex items-start justify-center">
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               className={`
-                   transition-all duration-200 ease-out 
-                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/5 min-h-[90vh] w-full max-w-6xl'} 
+                   transition-all duration-200 ease-out
+                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh] w-full max-w-6xl'}
                    ${currentTheme.bg}
                 `}
             >
@@ -539,7 +539,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      className="w-20 h-20 bg-black/5 rounded-3xl mx-auto flex items-center justify-center mb-6"
+                      className="w-20 h-20 bg-white/5 border border-white/5 rounded-sm mx-auto flex items-center justify-center mb-6"
                     >
                       <Plus className="w-10 h-10 opacity-20" />
                     </motion.div>
@@ -569,9 +569,9 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
         {/* Right Sidebar - Inspector */}
         {!previewMode && (
-          <aside className="w-80 bg-zinc-900 border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40 shadow-xl">
+          <aside className="w-80 bg-[#0F0F0F] border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40">
             {selectedSection ? (
-              <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-zinc-900">
+              <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#0F0F0F]">
                 <Inspector
                   section={selectedSection}
                   onUpdate={(newData) => updateElement(selectedSection.id, newData)}
@@ -582,12 +582,11 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                 />
               </div>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-center text-zinc-600 p-8">
-                <div className="w-20 h-20 bg-white/5 rounded-3xl flex items-center justify-center mb-6 rotate-3">
-                  <Edit3 className="w-8 h-8 opacity-20" />
+              <div className="flex items-center justify-center h-full text-gray-600 flex-col gap-4 font-mono text-xs">
+                <div className="w-16 h-16 rounded border border-white/5 bg-white/5 flex items-center justify-center animate-pulse">
+                  <MousePointer className="w-6 h-6 opacity-20" />
                 </div>
-                <p className="text-sm font-bold text-zinc-500 uppercase tracking-wider">No Selection</p>
-                <p className="text-[10px] mt-2 opacity-40 max-w-[150px]">Select an element to edit properties</p>
+                <p className="uppercase tracking-widest opacity-50">Select_Component</p>
               </div>
             )}
           </aside>
@@ -669,7 +668,7 @@ function EditableText({ value, onChange, className, type = 'input', placeholder 
       onClick={(e) => e.stopPropagation()}
       className={`
         outline-none min-w-[1ch] inline-block align-top transition-all duration-200 decoration-clone cursor-text
-        ${isFocused ? 'bg-indigo-500/20 ring-2 ring-indigo-500 rounded px-1 -mx-1 relative z-10' : 'hover:bg-indigo-500/10 hover:ring-1 hover:ring-indigo-500/30 rounded px-0.5 -mx-0.5'}
+        ${isFocused ? 'bg-cyan-500/20 ring-1 ring-cyan-500 rounded px-1 -mx-1 relative z-10' : 'hover:bg-cyan-500/10 hover:ring-1 hover:ring-cyan-500/30 rounded px-0.5 -mx-0.5'}
         ${!value ? 'min-w-[30px] opacity-50 before:content-[attr(data-placeholder)]' : ''}
         ${className}
       `}
@@ -687,12 +686,12 @@ function NavRailButton({ active, onClick, icon, label }) {
       onClick={onClick}
       className={`group flex flex-col items-center gap-1 p-2 rounded-xl transition-all relative ${active ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
     >
-      <div className={`p-3 rounded-2xl transition-all ${active ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25' : 'bg-transparent group-hover:bg-white/5'}`}>
+      <div className={`p-3 rounded transition-all ${active ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/25 ring-1 ring-cyan-400' : 'bg-transparent group-hover:bg-white/5'}`}>
         {icon}
       </div>
       <span className="text-[10px] font-bold">{label}</span>
       {active && (
-        <motion.div layoutId="activeRail" className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+        <motion.div layoutId="activeRail" className="absolute -left-3 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-400 rounded-r-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
       )}
     </button>
   )
@@ -702,10 +701,10 @@ function ElementCard({ onClick, label, icon, desc }) {
   return (
     <button
       onClick={onClick}
-      className="group flex flex-col items-start gap-2 w-full p-3 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-indigo-500/50 rounded-xl transition-all hover:shadow-xl hover:shadow-indigo-500/10 active:scale-[0.98] text-left relative overflow-hidden"
+      className="group flex flex-col items-start gap-2 w-full p-3 bg-[#121212] hover:bg-[#1A1A1A] border border-white/5 hover:border-cyan-500/50 rounded transition-all hover:shadow-xl hover:shadow-cyan-500/10 active:scale-[0.98] text-left relative overflow-hidden"
     >
       <div className="flex items-start justify-between w-full">
-        <div className="p-2 bg-white/5 rounded-lg group-hover:bg-indigo-500/20 text-zinc-400 group-hover:text-indigo-400 transition-colors">
+        <div className="p-2 bg-white/5 rounded group-hover:bg-cyan-500/20 text-gray-500 group-hover:text-cyan-400 transition-colors">
           {icon}
         </div>
         {/* Hidden but accessible add action, entire card is clickable */}
@@ -715,7 +714,7 @@ function ElementCard({ onClick, label, icon, desc }) {
         <span className="text-[9px] text-zinc-500 group-hover:text-zinc-400 leading-tight block mt-0.5">{desc}</span>
       </div>
       <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Plus className="w-3 h-3 text-indigo-400" />
+        <Plus className="w-3 h-3 text-cyan-400" />
       </div>
     </button>
   );
@@ -735,13 +734,13 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode }) 
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative group ${!previewMode ? 'hover:outline hover:outline-2 hover:outline-indigo-500/50 cursor-pointer' : ''} ${isSelected && !previewMode ? 'outline outline-2 outline-indigo-500 shadow-2xl z-10' : ''}`}
+      className={`relative group ${!previewMode ? 'hover:outline hover:outline-1 hover:outline-cyan-500/50 cursor-pointer' : ''} ${isSelected && !previewMode ? 'outline outline-1 outline-cyan-500 shadow-2xl z-10' : ''}`}
       onClick={(e) => { e.stopPropagation(); onSelect(); }}
     >
       {!previewMode && (
         <div
           {...attributes} {...listeners}
-          className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-zinc-900 border border-white/10 rounded-xl opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-50 shadow-xl"
+          className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-[#0F0F0F] border border-white/10 rounded opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing z-50 shadow-xl"
         >
           <GripVertical className="w-4 h-4 text-white" />
         </div>
@@ -828,12 +827,12 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected }) => {
 // Zoom Controls Component
 function ZoomBar({ zoom, onZoomIn, onZoomOut }) {
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-zinc-900/90 backdrop-blur-md border border-white/10 rounded-full px-4 py-2 flex items-center gap-4 shadow-xl z-50">
-      <button onClick={onZoomOut} className="p-1 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-[#0A0A0A]/90 backdrop-blur-md border border-white/10 rounded px-4 py-2 flex items-center gap-4 shadow-xl z-50">
+      <button onClick={onZoomOut} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors">
         <Minus className="w-4 h-4" />
       </button>
-      <span className="text-xs font-bold font-mono text-zinc-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
-      <button onClick={onZoomIn} className="p-1 hover:bg-white/10 rounded-full text-zinc-400 hover:text-white transition-colors">
+      <span className="text-xs font-bold font-mono text-gray-300 w-12 text-center">{Math.round(zoom * 100)}%</span>
+      <button onClick={onZoomIn} className="p-1 hover:bg-white/10 rounded text-gray-400 hover:text-white transition-colors">
         <Plus className="w-4 h-4" />
       </button>
     </div>
@@ -843,30 +842,30 @@ function ZoomBar({ zoom, onZoomIn, onZoomOut }) {
 // Inspector Components
 function InspectorHeader({ type, onDuplicate, onDelete, onMoveUp, onMoveDown }) {
   return (
-    <div className="sticky top-0 z-20 bg-zinc-900/80 backdrop-blur-xl border-b border-white/5 px-4 py-3 flex items-center justify-between">
+    <div className="sticky top-0 z-20 bg-[#0A0A0A]/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_15px_-3px_rgba(99,102,241,0.2)]">
-          <Layers className="w-4 h-4 text-indigo-400" />
+        <div className="w-8 h-8 rounded bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20 shadow-[0_0_15px_-3px_rgba(6,182,212,0.1)]">
+          <Layers className="w-4 h-4 text-cyan-400" />
         </div>
         <div>
-          <h3 className="text-xs font-bold text-white uppercase tracking-wide">{type}</h3>
+          <h3 className="text-xs font-bold text-gray-200 uppercase tracking-widest font-mono">{type}</h3>
         </div>
       </div>
 
-      <div className="flex items-center bg-white/5 rounded-lg border border-white/5 p-0.5">
+      <div className="flex items-center bg-white/[0.02] rounded border border-white/5 p-0.5">
         <div className="flex items-center gap-0.5 pr-1 border-r border-white/5 mr-1">
-          <button onClick={onMoveUp} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" title="Move Up">
+          <button onClick={onMoveUp} className="p-1.5 hover:bg-white/10 rounded-sm text-gray-500 hover:text-white transition-colors" title="Move Up">
             <ArrowUp className="w-3.5 h-3.5" />
           </button>
-          <button onClick={onMoveDown} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-colors" title="Move Down">
+          <button onClick={onMoveDown} className="p-1.5 hover:bg-white/10 rounded-sm text-gray-500 hover:text-white transition-colors" title="Move Down">
             <ArrowDown className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        <button onClick={onDuplicate} className="p-1.5 hover:bg-white/10 rounded-md text-zinc-400 hover:text-white transition-all hover:scale-105" title="Duplicate">
+        <button onClick={onDuplicate} className="p-1.5 hover:bg-white/10 rounded-sm text-gray-500 hover:text-white transition-all" title="Duplicate">
           <Copy className="w-3.5 h-3.5" />
         </button>
-        <button onClick={onDelete} className="p-1.5 hover:bg-red-500/20 rounded-md text-zinc-400 hover:text-red-400 transition-all hover:scale-105" title="Delete">
+        <button onClick={onDelete} className="p-1.5 hover:bg-red-500/20 rounded-sm text-gray-500 hover:text-red-400 transition-all" title="Delete">
           <Trash2 className="w-3.5 h-3.5" />
         </button>
       </div>
@@ -881,15 +880,15 @@ function QuickControls({ type, data, onUpdate }) {
   const supportsAlign = ['hero', 'text', 'buttons', 'richtext', 'footer', 'cta'].includes(type);
 
   return (
-    <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-white/5 bg-zinc-900/50">
+    <div className="px-5 py-4 grid grid-cols-2 gap-3 border-b border-white/5 bg-[#0A0A0A]">
       {/* Alignment Quick Toggle */}
       {supportsAlign ? (
-        <div className="flex items-center bg-black/20 rounded-lg p-1 border border-white/5">
+        <div className="flex items-center bg-white/5 rounded p-1 border border-white/5">
           {['left', 'center', 'right'].map(align => (
             <button
               key={align}
               onClick={() => onUpdate({ ...data, align })}
-              className={`flex-1 h-7 flex items-center justify-center rounded-md transition-all ${data.align === align ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-600 hover:text-zinc-300'}`}
+              className={`flex-1 h-7 flex items-center justify-center rounded-sm transition-all ${data.align === align ? 'bg-cyan-600/20 text-cyan-400 border border-cyan-500/30' : 'text-gray-600 hover:text-gray-300'}`}
               title={`Align ${align}`}
             >
               {align === 'left' && <AlignLeft className="w-3.5 h-3.5" />}
@@ -899,20 +898,20 @@ function QuickControls({ type, data, onUpdate }) {
           ))}
         </div>
       ) : (
-        <div className="flex items-center justify-center h-full text-[10px] lowercase font-mono text-zinc-600 italic select-none">
-          no alignment options
+        <div className="flex items-center justify-center h-full text-[10px] lowercase font-mono text-gray-700 italic select-none">
+            // no_alignment
         </div>
       )}
 
       {/* Visibility / Spacing Preset Toggle (Mock functionality for now) */}
       <div className="flex items-center gap-2">
         <button
-          className="h-full px-3 flex items-center justify-center bg-black/20 hover:bg-white/5 border border-white/5 rounded-lg text-zinc-500 hover:text-white transition-colors gap-2 w-full"
+          className="h-full px-3 flex items-center justify-center bg-white/5 hover:bg-white/10 border border-white/5 rounded text-gray-500 hover:text-white transition-colors gap-2 w-full"
           title="Reset Spacing"
           onClick={() => onUpdate({ ...data, py: 'py-20', px: 'px-8' })}
         >
           <Layout className="w-3.5 h-3.5" />
-          <span className="text-[9px] font-bold uppercase">Reset</span>
+          <span className="text-[10px] font-bold font-mono uppercase">Default_Layout</span>
         </button>
       </div>
     </div>
@@ -954,7 +953,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
   const toggle = (sec) => setActiveSection(activeSection === sec ? null : sec);
 
   return (
-    <div className="pb-32 min-h-screen bg-zinc-900 overflow-x-hidden">
+    <div className="pb-32 min-h-screen bg-[#0F0F0F] overflow-x-hidden border-l border-white/5">
       <InspectorHeader
         type={type}
         onDuplicate={onDuplicate}
