@@ -24,24 +24,29 @@ import { useRef } from 'react'; // Added useRef explicitly if not present
 
 // Theme definitions
 const themes = {
-  light: { bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-black text-white hover:bg-black/90', secondary: 'bg-gray-100', muted: 'text-gray-600' },
-  dark: { bg: 'bg-[#0A0A0A]', text: 'text-gray-200', border: 'border-white/5', accent: 'bg-white text-black hover:bg-gray-200', secondary: 'bg-[#0F0F0F]', muted: 'text-gray-500' },
-  gray: { bg: 'bg-gray-50', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-gray-900 text-white hover:bg-black', secondary: 'bg-gray-200', muted: 'text-gray-600' },
-  blue: { bg: 'bg-blue-50', text: 'text-blue-950', border: 'border-blue-200', accent: 'bg-blue-600 text-white hover:bg-blue-700', secondary: 'bg-blue-100', muted: 'text-blue-700' },
-  indigo: { bg: 'bg-indigo-50', text: 'text-indigo-950', border: 'border-indigo-200', accent: 'bg-indigo-600 text-white hover:bg-indigo-700', secondary: 'bg-indigo-100', muted: 'text-indigo-700' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-950', border: 'border-purple-200', accent: 'bg-purple-600 text-white hover:bg-purple-700', secondary: 'bg-purple-100', muted: 'text-purple-700' },
-  slate: { bg: 'bg-slate-50', text: 'text-slate-900', border: 'border-slate-300', accent: 'bg-slate-900 text-white hover:bg-slate-800', secondary: 'bg-slate-100', muted: 'text-slate-600' },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-950', border: 'border-emerald-200', accent: 'bg-emerald-600 text-white hover:bg-emerald-700', secondary: 'bg-emerald-100', muted: 'text-emerald-700' },
-  charcoal: { bg: 'bg-zinc-900', text: 'text-zinc-100', border: 'border-zinc-700', accent: 'bg-zinc-100 text-zinc-900 hover:bg-zinc-200', secondary: 'bg-zinc-800', muted: 'text-zinc-400' },
-  peach: { bg: 'bg-orange-50', text: 'text-orange-950', border: 'border-orange-200', accent: 'bg-orange-600 text-white hover:bg-orange-700', secondary: 'bg-orange-100', muted: 'text-orange-700' },
-  rose: { bg: 'bg-rose-50', text: 'text-rose-950', border: 'border-rose-200', accent: 'bg-rose-600 text-white hover:bg-rose-700', secondary: 'bg-rose-100', muted: 'text-rose-700' },
-  teal: { bg: 'bg-teal-50', text: 'text-teal-950', border: 'border-teal-200', accent: 'bg-teal-600 text-white hover:bg-teal-700', secondary: 'bg-teal-100', muted: 'text-teal-700' },
-  midnight: { bg: 'bg-slate-950', text: 'text-slate-100', border: 'border-slate-800', accent: 'bg-indigo-500 text-white hover:bg-indigo-600', secondary: 'bg-slate-900', muted: 'text-slate-400' },
-  coffee: { bg: 'bg-stone-50', text: 'text-stone-900', border: 'border-stone-300', accent: 'bg-stone-800 text-white hover:bg-stone-900', secondary: 'bg-stone-100', muted: 'text-stone-600' },
-  cyber: { bg: 'bg-neutral-950', text: 'text-neutral-100', border: 'border-neutral-800', accent: 'bg-cyan-500 text-black hover:bg-cyan-400', secondary: 'bg-neutral-900', muted: 'text-neutral-400' },
-  terminal: { bg: 'bg-black', text: 'text-green-400', border: 'border-green-900', accent: 'bg-green-600 text-black hover:bg-green-500', secondary: 'bg-zinc-900', muted: 'text-green-700' },
-  lavender: { bg: 'bg-violet-50', text: 'text-violet-950', border: 'border-violet-200', accent: 'bg-violet-600 text-white hover:bg-violet-700', secondary: 'bg-violet-100', muted: 'text-violet-700' },
-  mint: { bg: 'bg-emerald-50', text: 'text-emerald-950', border: 'border-emerald-200', accent: 'bg-emerald-600 text-white hover:bg-emerald-700', secondary: 'bg-emerald-100', muted: 'text-emerald-700' }
+  // Light Themes
+  light: { type: 'light', bg: 'bg-white', text: 'text-gray-900', border: 'border-gray-200', accent: 'bg-black text-white hover:bg-neutral-800', secondary: 'bg-gray-50', muted: 'text-gray-500' },
+  corporate: { type: 'light', bg: 'bg-slate-50', text: 'text-slate-900', border: 'border-slate-300', accent: 'bg-blue-700 text-white hover:bg-blue-800', secondary: 'bg-white', muted: 'text-slate-500' },
+  gray: { type: 'light', bg: 'bg-gray-50', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-gray-900 text-white hover:bg-black', secondary: 'bg-gray-200', muted: 'text-gray-600' },
+  retro: { type: 'light', bg: 'bg-[#FFF8E7]', text: 'text-[#4A403A]', border: 'border-[#D4C5B0]', accent: 'bg-[#E07A5F] text-white hover:bg-[#D0654C]', secondary: 'bg-[#F4E4BC]', muted: 'text-[#9A8C7D]' },
+  lavender: { type: 'light', bg: 'bg-violet-50', text: 'text-violet-950', border: 'border-violet-200', accent: 'bg-violet-600 text-white hover:bg-violet-700', secondary: 'bg-violet-100', muted: 'text-violet-700' },
+  mint: { type: 'light', bg: 'bg-emerald-50', text: 'text-emerald-950', border: 'border-emerald-200', accent: 'bg-emerald-600 text-white hover:bg-emerald-700', secondary: 'bg-emerald-100', muted: 'text-emerald-700' },
+  peach: { type: 'light', bg: 'bg-orange-50', text: 'text-orange-950', border: 'border-orange-200', accent: 'bg-orange-600 text-white hover:bg-orange-700', secondary: 'bg-orange-100', muted: 'text-orange-700' },
+  sunset: { type: 'light', bg: 'bg-rose-50', text: 'text-rose-950', border: 'border-rose-200', accent: 'bg-amber-500 text-white hover:bg-amber-600', secondary: 'bg-rose-100', muted: 'text-rose-700' },
+  aqua: { type: 'light', bg: 'bg-cyan-50', text: 'text-cyan-950', border: 'border-cyan-200', accent: 'bg-cyan-600 text-white hover:bg-cyan-700', secondary: 'bg-cyan-100', muted: 'text-cyan-700' },
+  forest: { type: 'light', bg: 'bg-stone-50', text: 'text-stone-900', border: 'border-stone-300', accent: 'bg-emerald-700 text-white hover:bg-emerald-800', secondary: 'bg-stone-200', muted: 'text-stone-600' },
+
+  // Dark Themes
+  dark: { type: 'dark', bg: 'bg-[#0A0A0A]', text: 'text-gray-200', border: 'border-white/5', accent: 'bg-white text-black hover:bg-gray-200', secondary: 'bg-[#0F0F0F]', muted: 'text-gray-500' },
+  cyber: { type: 'dark', bg: 'bg-neutral-950', text: 'text-neutral-100', border: 'border-neutral-800', accent: 'bg-cyan-500 text-black hover:bg-cyan-400', secondary: 'bg-neutral-900', muted: 'text-neutral-400' },
+  midnight: { type: 'dark', bg: 'bg-slate-950', text: 'text-slate-100', border: 'border-slate-800', accent: 'bg-indigo-500 text-white hover:bg-indigo-600', secondary: 'bg-slate-900', muted: 'text-slate-400' },
+  obsidian: { type: 'dark', bg: 'bg-[#050505]', text: 'text-gray-300', border: 'border-white/10', accent: 'bg-purple-600 text-white hover:bg-purple-500', secondary: 'bg-[#121212]', muted: 'text-gray-600' },
+  terminal: { type: 'dark', bg: 'bg-black', text: 'text-green-400', border: 'border-green-900', accent: 'bg-green-600 text-black hover:bg-green-500', secondary: 'bg-zinc-900', muted: 'text-green-700' },
+  luxury: { type: 'dark', bg: 'bg-[#1A1A1A]', text: 'text-[#D4AF37]', border: 'border-[#D4AF37]/20', accent: 'bg-[#D4AF37] text-black hover:bg-[#C5A028]', secondary: 'bg-[#222]', muted: 'text-[#888]' },
+  deep_space: { type: 'dark', bg: 'bg-[#0F172A]', text: 'text-blue-100', border: 'border-blue-900', accent: 'bg-blue-500 text-white hover:bg-blue-600', secondary: 'bg-[#1E293B]', muted: 'text-blue-400' },
+  crimson: { type: 'dark', bg: 'bg-[#1a0505]', text: 'text-red-100', border: 'border-red-900/30', accent: 'bg-red-600 text-white hover:bg-red-700', secondary: 'bg-[#2b0a0a]', muted: 'text-red-400' },
+  dracula: { type: 'dark', bg: 'bg-[#282a36]', text: 'text-[#f8f8f2]', border: 'border-[#6272a4]', accent: 'bg-[#ff79c6] text-[#282a36] hover:bg-[#bd93f9]', secondary: 'bg-[#44475a]', muted: 'text-[#6272a4]' },
+  neon: { type: 'dark', bg: 'bg-black', text: 'text-white', border: 'border-fuchsia-500', accent: 'bg-fuchsia-600 text-white hover:bg-fuchsia-500 shadow-[0_0_15px_rgba(192,38,211,0.5)]', secondary: 'bg-neutral-900', muted: 'text-fuchsia-300' },
 };
 
 const elementCategories = {
@@ -497,18 +502,45 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                       <h2 className="text-sm font-bold text-white">Design System</h2>
                       <p className="text-[10px] text-zinc-500 mt-1">Global styling and color palettes</p>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-5 scrollbar-hide">
-                      <div className="grid grid-cols-2 gap-2">
-                        {Object.keys(themes).map(name => (
-                          <button
-                            key={name}
-                            onClick={() => setTheme(name)}
-                            className={`p-3 rounded transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-cyan-500 ring-1 ring-cyan-500/50 bg-cyan-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
-                          >
-                            <span className={`block mb-2 w-4 h-4 rounded-full ${themes[name].accent.split(' ')[0]}`}></span>
-                            <span className="text-zinc-300 group-hover:text-white transition-colors">{name}</span>
-                          </button>
-                        ))}
+                    <div className="flex-1 overflow-y-auto p-5 scrollbar-hide space-y-8">
+                      {/* Dark Themes */}
+                      <div>
+                        <h3 className="text-[10px] uppercase font-bold text-gray-500 mb-3 tracking-wider">Dark Modes</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.keys(themes).filter(k => themes[k].type === 'dark').map(name => (
+                            <button
+                              key={name}
+                              onClick={() => setTheme(name)}
+                              className={`p-3 rounded transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-cyan-500 ring-1 ring-cyan-500/50 bg-cyan-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-3 h-3 rounded-full ${themes[name].accent.split(' ')[0]}`}></div>
+                                <div className={`w-3 h-3 rounded-full ${themes[name].bg.split(' ')[0]} border border-white/20`}></div>
+                              </div>
+                              <span className="text-gray-300 group-hover:text-white transition-colors">{name.replace('_', ' ')}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Light Themes */}
+                      <div>
+                        <h3 className="text-[10px] uppercase font-bold text-gray-500 mb-3 tracking-wider">Light Modes</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.keys(themes).filter(k => themes[k].type === 'light').map(name => (
+                            <button
+                              key={name}
+                              onClick={() => setTheme(name)}
+                              className={`p-3 rounded transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-cyan-500 ring-1 ring-cyan-500/50 bg-cyan-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-3 h-3 rounded-full ${themes[name].accent.split(' ')[0]}`}></div>
+                                <div className={`w-3 h-3 rounded-full ${themes[name].bg.split(' ')[0]} border border-black/10`}></div>
+                              </div>
+                              <span className="text-gray-300 group-hover:text-white transition-colors">{name.replace('_', ' ')}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </>
