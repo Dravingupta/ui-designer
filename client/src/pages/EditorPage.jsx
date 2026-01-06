@@ -4,6 +4,8 @@ import api from '../utils/api';
 import CanvaEditor from '../components/CanvaEditor';
 import { useAuth } from '../context/AuthContext';
 
+import Loader from '../components/Loader';
+
 const EditorPage = () => {
   const { id } = useParams();
   const { user } = useAuth();
@@ -42,7 +44,7 @@ const EditorPage = () => {
     }
   };
 
-  if (loading) return null;
+  if (loading) return <Loader message="Decrypting_Project_Data..." />;
 
   return (
     <CanvaEditor

@@ -200,30 +200,62 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       shadow: 'shadow-none',
       customBg: '',
       customText: '',
-      maxWidth: 'max-w-6xl'
+      maxWidth: 'max-w-6xl',
+      animation: 'none'
     };
 
     const defaults = {
-      navbar: { ...common, logo: 'DESIGNER', links: ['Home', 'Features', 'Pricing'], sticky: false, py: 'py-8' },
-      hero: { ...common, heading: 'Design something amazing', subheading: 'Your vision, powered by AI components.', button: 'Get Started', align: 'center', py: 'py-40' },
-      richtext: { ...common, heading: 'Our Story', body: 'Start telling your story here. This component supports multiple lines of text and custom headings.', align: 'left' },
+      navbar: { 
+        ...common, 
+        logo: 'DESIGNER', 
+        links: [
+          { label: 'Home', href: '#' },
+          { label: 'Features', href: '#features' },
+          { label: 'Pricing', href: '#pricing' }
+        ], 
+        sticky: false, 
+        py: 'py-8' 
+      },
+      hero: { 
+        ...common, 
+        heading: 'Design something amazing', 
+        subheading: 'Your vision, powered by AI components.', 
+        button: 'Get Started', 
+        buttonHref: '#',
+        align: 'center', 
+        py: 'py-40' 
+      },
+      richtext: { ...common, heading: 'Our Story', body: 'Start telling your story here.', align: 'left' },
       text: { ...common, content: 'This is a text block.', fontSize: 'base', align: 'left', py: 'py-8' },
       image: { ...common, url: '', height: 400, caption: 'Beautiful Image', fullWidth: false },
-      cards: { ...common, count: 3, titles: Array(3).fill('Card Title'), descriptions: Array(3).fill('Card description text goes here.'), imageUrls: Array(3).fill('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80') },
+      cards: { 
+        ...common, 
+        count: 3, 
+        titles: Array(3).fill('Card Title'), 
+        descriptions: Array(3).fill('Card description text goes here.'), 
+        imageUrls: Array(3).fill('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'),
+        buttonLabel: 'Learn More',
+        buttonHref: '#'
+      },
       testimonials: { ...common, items: [{ name: 'Alex Rivera', role: 'Founder', quote: 'This builder is game changing!', imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=100&h=100&q=80' }] },
-      pricing: { ...common, plans: [{ name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false }, { name: 'Pro', price: '$29', features: ['All Features', 'Support'], highlighted: true }] },
+      pricing: { 
+        ...common, 
+        plans: [
+          { name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false, buttonLabel: 'Get Started', buttonHref: '#' }, 
+          { name: 'Pro', price: '$29', features: ['All Features', 'Support'], highlighted: true, buttonLabel: 'Go Pro', buttonHref: '#' }
+        ] 
+      },
       contact: { ...common, heading: 'Contact Us', email: 'hi@example.com', phone: '+1 234 567 890', address: '123 Studio St' },
       logogrid: { ...common, logos: Array(4).fill('https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'), columns: 4 },
       video: { ...common, heading: 'Product Demo', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
-      buttons: { ...common, buttons: [{ label: 'Action 1' }, { label: 'Action 2' }], align: 'center', py: 'py-12' },
+      buttons: { ...common, buttons: [{ label: 'Action 1', href: '#' }, { label: 'Action 2', href: '#' }], align: 'center', py: 'py-12' },
       features: { ...common, items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
-      stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], layout: 'horizontal', py: 'py-16' },
-      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', py: 'py-24' },
+      stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], py: 'py-16' },
+      cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', buttonHref: '#', py: 'py-24' },
       faq: { ...common, items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
       divider: { ...common, height: 'md', showLine: true, py: 'py-0' },
       footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', py: 'py-12' },
-      timeline: { ...common, items: [{ title: 'Step 1', description: 'Describe the first step.' }, { title: 'Step 1', description: 'Describe the first step.' }, { title: 'Step 3', description: 'Describe the third step.' }], py: 'py-16' },
-
+      timeline: { ...common, items: [{ title: 'Step 1', description: 'Describe the first step.' }], py: 'py-16' },
     };
     return defaults[type] || { ...common };
   };
@@ -667,7 +699,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 }
 
 // Helper Components
-function EditableText({ value, onChange, className, type = 'input', placeholder = 'Type here...' }) {
+function EditableText({ value, onChange, className, type = 'input', placeholder = 'Type here...', previewMode }) {
   const ref = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
   const lastEmittedValue = useRef(value);
@@ -715,7 +747,7 @@ function EditableText({ value, onChange, className, type = 'input', placeholder 
   return (
     <span
       ref={ref}
-      contentEditable
+      contentEditable={!previewMode}
       suppressContentEditableWarning
       onFocus={() => setIsFocused(true)}
       onBlur={handleBlur}
@@ -809,12 +841,13 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
         onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
         isSelected={isSelected && !previewMode}
         isMobileView={isMobileView}
+        previewMode={previewMode}
       />
     </div>
   );
 }
 
-const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView }) => {
+const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode }) => {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
@@ -838,7 +871,7 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView
 
     stats: StatsSection,
     cta: CTASection,
-
+    featuresgrid: FeaturesGridSection,
   };
 
   const Component = components[type] || (({ type, theme }) => (
@@ -847,6 +880,14 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView
       <p className="text-xs mt-2 opacity-50">Configuration active in sidebar</p>
     </div>
   ));
+
+  const componentProps = {
+    data: displayData,
+    theme,
+    onUpdate,
+    isMobileView,
+    previewMode
+  };
 
   const customStyle = {
     backgroundColor: data.customBg || undefined,
@@ -871,18 +912,22 @@ const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView
   const anim = animations[displayData.animation] || animations.none;
 
   return (
-    <motion.div
-      initial={anim.initial}
-      whileInView={anim.animate}
-      viewport={{ once: true }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+    <motion.section
+      initial="none"
+      animate={data.animation || 'none'}
+      variants={animations}
+      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       style={customStyle}
-      className={`${displayData.py} ${displayData.px}`}
+      className={`relative overflow-hidden ${data.py} ${data.px}`}
     >
-      <div className={`${displayData.maxWidth} mx-auto ${displayData.radius} ${displayData.shadow}`}>
-        <Component data={displayData} theme={theme} type={type} onUpdate={onUpdate} isSelected={isSelected} isMobileView={isMobileView} />
+      <div className={`mx-auto ${data.maxWidth}`}>
+        <Component {...componentProps} />
       </div>
-    </motion.div>
+
+      {isSelected && !previewMode && (
+        <div className="absolute inset-0 border-2 border-cyan-500 rounded-lg pointer-events-none" />
+      )}
+    </motion.section>
   );
 }
 
@@ -1040,8 +1085,9 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
               <Input label="Title" value={data.heading} onChange={(v) => update('heading', v)} />
               <Textarea label="Subtitle" value={data.subheading} onChange={(v) => update('subheading', v)} rows={3} />
             </ControlGroup>
-            <ControlGroup label="Action">
-              <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
+            <ControlGroup label="Action Button">
+              <Input label="Label" value={data.button} onChange={(v) => update('button', v)} />
+              <Input label="Link (URL)" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} placeholder="#" />
             </ControlGroup>
           </>
         )}
@@ -1051,9 +1097,30 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
             <ControlGroup label="Brand">
               <Input label="Logo Text" value={data.logo} onChange={(v) => update('logo', v)} />
             </ControlGroup>
-            <ControlGroup label="Links">
-              <Textarea label="Menu Items (comma separated)" value={data.links.join(', ')} onChange={(v) => update('links', v.split(',').map(s => s.trim()))} />
-            </ControlGroup>
+            <div className="space-y-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Navigation Links</p>
+              {data.links.map((link, i) => (
+                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
+                  <Input label="Label" value={link.label} onChange={(v) => {
+                    const newLinks = [...data.links];
+                    newLinks[i] = { ...link, label: v };
+                    update('links', newLinks);
+                  }} />
+                  <Input label="URL" value={link.href} onChange={(v) => {
+                    const newLinks = [...data.links];
+                    newLinks[i] = { ...link, href: v };
+                    update('links', newLinks);
+                  }} />
+                  <button 
+                    onClick={() => update('links', data.links.filter((_, idx) => idx !== i))}
+                    className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+              <button onClick={() => update('links', [...data.links, { label: 'New Link', href: '#' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Link</button>
+            </div>
           </>
         )}
 
@@ -1074,6 +1141,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
         {type === 'video' && (
           <ControlGroup label="Video Source">
             <Input label="Embed URL" value={data.videoUrl} onChange={(v) => update('videoUrl', v)} />
+            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
           </ControlGroup>
         )}
 
@@ -1090,23 +1158,34 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
         {type === 'buttons' && (
           <div className="space-y-4">
             {data.buttons.map((btn, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
-                <Input label={`Button ${i + 1}`} value={btn.label} onChange={(v) => {
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
+                <Input label="Label" value={btn.label} onChange={(v) => {
                   const newBtns = [...data.buttons];
                   newBtns[i] = { ...btn, label: v };
                   update('buttons', newBtns);
                 }} />
+                <Input label="Link (URL)" value={btn.href} onChange={(v) => {
+                  const newBtns = [...data.buttons];
+                  newBtns[i] = { ...btn, href: v };
+                  update('buttons', newBtns);
+                }} />
+                <button 
+                  onClick={() => update('buttons', data.buttons.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
-            <button onClick={() => update('buttons', [...data.buttons, { label: 'New Action' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Button</button>
+            <button onClick={() => update('buttons', [...data.buttons, { label: 'New Action', href: '#' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Button</button>
           </div>
         )}
 
         {type === 'pricing' && (
           <div className="space-y-4">
             {data.plans.map((plan, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
-                <Input label="Name" value={plan.name} onChange={(v) => {
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
+                <Input label="Plan Name" value={plan.name} onChange={(v) => {
                   const newPlans = [...data.plans];
                   newPlans[i] = { ...plan, name: v };
                   update('plans', newPlans);
@@ -1116,15 +1195,42 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newPlans[i] = { ...plan, price: v };
                   update('plans', newPlans);
                 }} />
+                <ControlGroup label="Button">
+                  <Input label="Label" value={plan.buttonLabel} onChange={(v) => {
+                    const newPlans = [...data.plans];
+                    newPlans[i] = { ...plan, buttonLabel: v };
+                    update('plans', newPlans);
+                  }} />
+                  <Input label="URL" value={plan.buttonHref} onChange={(v) => {
+                    const newPlans = [...data.plans];
+                    newPlans[i] = { ...plan, buttonHref: v };
+                    update('plans', newPlans);
+                  }} />
+                </ControlGroup>
+                <div className="flex items-center gap-2 mt-2">
+                  <input type="checkbox" checked={plan.highlighted} onChange={(e) => {
+                    const newPlans = [...data.plans];
+                    newPlans[i] = { ...plan, highlighted: e.target.checked };
+                    update('plans', newPlans);
+                  }} className="rounded border-white/20 bg-zinc-800" />
+                  <span className="text-xs text-zinc-400">Highlighted Plan</span>
+                </div>
+                <button 
+                  onClick={() => update('plans', data.plans.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
+            <button onClick={() => update('plans', [...data.plans, { name: 'New Plan', price: '$99', features: [], highlighted: false, buttonLabel: 'Get Started', buttonHref: '#' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Plan</button>
           </div>
         )}
 
         {type === 'testimonials' && (
           <div className="space-y-4">
             {data.items.map((item, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
                 <Input label="Name" value={item.name} onChange={(v) => {
                   const newItems = [...data.items];
                   newItems[i] = { ...item, name: v };
@@ -1145,15 +1251,22 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, imageUrl: v };
                   update('items', newItems);
                 }} />
+                <button 
+                  onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
+            <button onClick={() => update('items', [...data.items, { name: 'New Person', role: 'Role', quote: 'Quote here...', imageUrl: '' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Testimonial</button>
           </div>
         )}
 
         {['timeline'].includes(type) && (
           <div className="space-y-4">
             {data.items.map((item, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
                 <Input label="Title" value={item.title} onChange={(v) => {
                   const newItems = [...data.items];
                   newItems[i] = { ...item, title: v };
@@ -1164,9 +1277,15 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, description: v };
                   update('items', newItems);
                 }} rows={2} />
+                <button 
+                  onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
-            <button onClick={() => update('items', [...data.items, { title: 'Step', description: 'Desc' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Step</button>
+            <button onClick={() => update('items', [...data.items, { title: 'New Step', description: 'Step description' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Step</button>
           </div>
         )}
 
@@ -1179,23 +1298,13 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
 
         {type === 'cards' && (
           <>
-            <ControlGroup label="Grid Config">
-              <Input label="Count" type="number" value={data.count} onChange={(v) => {
-                const count = Math.max(1, parseInt(v) || 1);
-                update('count', count);
-                // Preserve existing data if possible, else fill
-                const newTitles = Array(count).fill('').map((_, i) => data.titles[i] || `Card ${i + 1}`);
-                const newDesc = Array(count).fill('').map((_, i) => data.descriptions[i] || 'Description...');
-                const newImgs = Array(count).fill('').map((_, i) => data.imageUrls[i] || 'https://via.placeholder.com/400x300');
-                onUpdate({ ...data, count, titles: newTitles, descriptions: newDesc, imageUrls: newImgs });
-              }} />
+            <ControlGroup label="Button Config">
+              <Input label="Label" value={data.buttonLabel} onChange={(v) => update('buttonLabel', v)} />
+              <Input label="Link (URL)" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} />
             </ControlGroup>
             <div className="space-y-4">
               {data.titles.map((title, i) => (
-                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-zinc-500 uppercase">Card {i + 1}</span>
-                  </div>
+                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-3 relative group mt-2">
                   <Input label="Title" value={title} onChange={(v) => {
                     const newTitles = [...data.titles];
                     newTitles[i] = v;
@@ -1211,8 +1320,25 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     newImgs[i] = v;
                     update('imageUrls', newImgs);
                   }} />
+                  <button 
+                    onClick={() => {
+                        const newTitles = data.titles.filter((_, idx) => idx !== i);
+                        const newDesc = data.descriptions.filter((_, idx) => idx !== i);
+                        const newImgs = data.imageUrls.filter((_, idx) => idx !== i);
+                        onUpdate({ ...data, count: newTitles.length, titles: newTitles, descriptions: newDesc, imageUrls: newImgs });
+                    }}
+                    className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
+              <button onClick={() => {
+                  update('titles', [...data.titles, 'New Card']);
+                  update('descriptions', [...data.descriptions, 'New description']);
+                  update('imageUrls', [...data.imageUrls, '']);
+                  update('count', data.count + 1);
+              }} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Card</button>
             </div>
           </>
         )}
@@ -1220,7 +1346,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
         {type === 'stats' && (
           <div className="space-y-4">
             {data.stats.map((stat, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
                 <Input label="Label" value={stat.label} onChange={(v) => {
                   const newStats = [...data.stats];
                   newStats[i] = { ...stat, label: v };
@@ -1231,6 +1357,12 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newStats[i] = { ...stat, value: v };
                   update('stats', newStats);
                 }} />
+                <button 
+                  onClick={() => update('stats', data.stats.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
             <button onClick={() => update('stats', [...data.stats, { label: 'New Metric', value: '0' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Stat</button>
@@ -1240,7 +1372,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
         {type === 'features' && (
           <div className="space-y-4">
             {data.items.map((item, i) => (
-              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
                 <Input label="Title" value={item.title} onChange={(v) => {
                   const newItems = [...data.items];
                   newItems[i] = { ...item, title: v };
@@ -1251,6 +1383,12 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, description: v };
                   update('items', newItems);
                 }} rows={2} />
+                <button 
+                  onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
               </div>
             ))}
             <button onClick={() => update('items', [...data.items, { title: 'Feature', description: 'Description' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Feature</button>
@@ -1261,7 +1399,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           <div className="space-y-4">
             <ControlGroup label="Logo Items">
               {data.logos.map((url, i) => (
-                <div key={i} className="flex gap-2 items-center">
+                <div key={i} className="flex gap-2 items-center relative group">
                   <Input
                     label={`Logo ${i + 1}`}
                     value={url}
@@ -1272,18 +1410,15 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     }}
                   />
                   <button
-                    onClick={() => {
-                      const newLogos = data.logos.filter((_, idx) => idx !== i);
-                      update('logos', newLogos);
-                    }}
-                    className="mt-4 p-2 text-zinc-500 hover:text-red-400 transition-colors"
+                    onClick={() => update('logos', data.logos.filter((_, idx) => idx !== i))}
+                    className="absolute top-7 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               ))}
               <button
-                onClick={() => update('logos', [...data.logos, 'https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'])}
+                onClick={() => update('logos', [...data.logos, ''])}
                 className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2 block mt-2"
               >
                 + Add Logo
@@ -1293,84 +1428,69 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
               <Input label="Columns" type="number" value={data.columns} onChange={(v) => update('columns', parseInt(v))} />
             </ControlGroup>
           </div>
-        )
-        }
+        )}
 
-        {
-          type === 'cta' && (
-            <ControlGroup label="Call to Action">
-              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
-              <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => update('supportingText', v)} rows={3} />
-              <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
-            </ControlGroup>
-          )
-        }
+        {type === 'cta' && (
+          <ControlGroup label="Call to Action">
+            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+            <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => update('supportingText', v)} rows={3} />
+            <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
+            <Input label="Button Link" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} />
+          </ControlGroup>
+        )}
 
-        {
-          type === 'contact' && (
-            <ControlGroup label="Contact Info">
-              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
-              <Input label="Email" value={data.email} onChange={(v) => update('email', v)} />
-              <Input label="Phone" value={data.phone} onChange={(v) => update('phone', v)} />
-              <Textarea label="Address" value={data.address} onChange={(v) => update('address', v)} rows={2} />
-            </ControlGroup>
-          )
-        }
+        {type === 'contact' && (
+          <ControlGroup label="Contact Info">
+            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+            <Input label="Email" value={data.email} onChange={(v) => update('email', v)} />
+            <Input label="Phone" value={data.phone} onChange={(v) => update('phone', v)} />
+            <Textarea label="Address" value={data.address} onChange={(v) => update('address', v)} rows={2} />
+          </ControlGroup>
+        )}
 
-        {
-          type === 'faq' && (
-            <div className="space-y-4">
-              {data.items.map((item, i) => (
-                <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2">
-                  <Input label="Question" value={item.question} onChange={(v) => {
-                    const newItems = [...data.items];
-                    newItems[i] = { ...item, question: v };
-                    update('items', newItems);
-                  }} />
-                  <Textarea label="Answer" value={item.answer} onChange={(v) => {
-                    const newItems = [...data.items];
-                    newItems[i] = { ...item, answer: v };
-                    update('items', newItems);
-                  }} rows={3} />
-                  <button
-                    onClick={() => {
-                      const newItems = data.items.filter((_, idx) => idx !== i);
-                      update('items', newItems);
-                    }}
-                    className="text-[10px] text-red-500 hover:text-red-400 font-bold uppercase"
-                  >
-                    Remove Item
-                  </button>
-                </div>
-              ))}
-              <button onClick={() => update('items', [...data.items, { question: 'New Question', answer: 'New Answer' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add FAQ Item</button>
-            </div>
-          )
-        }
+        {type === 'faq' && (
+          <div className="space-y-4">
+            {data.items.map((item, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
+                <Input label="Question" value={item.question} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, question: v };
+                  update('items', newItems);
+                }} />
+                <Textarea label="Answer" value={item.answer} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, answer: v };
+                  update('items', newItems);
+                }} rows={3} />
+                <button
+                  onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
+                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button onClick={() => update('items', [...data.items, { question: 'New Question', answer: 'New Answer' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add FAQ Item</button>
+          </div>
+        )}
 
-        {
-          type === 'footer' && (
-            <ControlGroup label="Footer Content">
-              <Input label="Copyright Text" value={data.text} onChange={(v) => update('text', v)} />
-            </ControlGroup>
-          )
-        }
+        {type === 'footer' && (
+          <ControlGroup label="Footer Content">
+            <Input label="Copyright Text" value={data.text} onChange={(v) => update('text', v)} />
+          </ControlGroup>
+        )}
 
         {/* Fallback for simple inputs if not explicitly handled above but common */}
-        {
-          data.heading !== undefined && !['hero', 'richtext', 'cta', 'contact', 'video'].includes(type) && (
-            <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
-          )
-        }
-        {
-          data.text !== undefined && type !== 'footer' && (
-            <Input label="Text" value={data.text} onChange={(v) => update('text', v)} />
-          )
-        }
-      </InspectorSection >
+        {data.heading !== undefined && !['hero', 'richtext', 'cta', 'contact', 'video'].includes(type) && (
+          <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+        )}
+        {data.text !== undefined && type !== 'footer' && (
+          <Input label="Text" value={data.text} onChange={(v) => update('text', v)} />
+        )}
+      </InspectorSection>
 
       {/* 2. LAYOUT SECTION */}
-      < InspectorSection title="Layout" icon={Layout} isOpen={activeSection === 'Layout'} onToggle={() => toggle('Layout')}>
+      <InspectorSection title="Layout" icon={Layout} isOpen={activeSection === 'Layout'} onToggle={() => toggle('Layout')}>
         <ControlGroup label="Spacing">
           <Select label="Vertical Scale" value={data.py} onChange={(v) => update('py', v)} options={['py-0', 'py-8', 'py-16', 'py-24', 'py-32', 'py-40', 'py-60']} />
           <Select label="Horizontal Scale" value={data.px} onChange={(v) => update('px', v)} options={['px-0', 'px-4', 'px-8', 'px-12', 'px-20', 'px-32']} />
@@ -1383,23 +1503,19 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           )}
         </ControlGroup>
 
-        {/* Alignment moved to QuickControls, enabling specific manual overrides here if needed, or remove to simplify */}
-
-        {
-          type === 'image' && (
-            <ControlGroup label="Size">
-              <Input label="Height (px)" type="number" value={data.height} onChange={(v) => update('height', parseInt(v))} />
-              <div className="flex items-center gap-2 mt-2">
-                <input type="checkbox" checked={data.fullWidth} onChange={(e) => update('fullWidth', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
-                <span className="text-xs text-zinc-400">Full Width</span>
-              </div>
-            </ControlGroup>
-          )
-        }
-      </InspectorSection >
+        {type === 'image' && (
+          <ControlGroup label="Size">
+            <Input label="Height (px)" type="number" value={data.height} onChange={(v) => update('height', parseInt(v))} />
+            <div className="flex items-center gap-2 mt-2">
+              <input type="checkbox" checked={data.fullWidth} onChange={(e) => update('fullWidth', e.target.checked)} className="rounded border-white/20 bg-zinc-800" />
+              <span className="text-xs text-zinc-400">Full Width</span>
+            </div>
+          </ControlGroup>
+        )}
+      </InspectorSection>
 
       {/* 3. STYLE SECTION */}
-      < InspectorSection title="Appearance" icon={ImageIcon2} isOpen={activeSection === 'Appearance'} onToggle={() => toggle('Appearance')}>
+      <InspectorSection title="Appearance" icon={ImageIcon2} isOpen={activeSection === 'Appearance'} onToggle={() => toggle('Appearance')}>
         <ControlGroup label="Shape & Shadow">
           <div className="grid grid-cols-2 gap-4">
             <Select label="Radius" value={data.radius} onChange={(v) => update('radius', v)} options={['rounded-none', 'rounded-lg', 'rounded-2xl', 'rounded-3xl', 'rounded-full']} />
@@ -1415,9 +1531,9 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           <Input label="Background" value={data.customBg} onChange={(v) => update('customBg', v)} placeholder="hex or rgba" />
           <Input label="Text Color" value={data.customText} onChange={(v) => update('customText', v)} placeholder="hex or rgba" />
         </ControlGroup>
-      </InspectorSection >
+      </InspectorSection>
 
-    </div >
+    </div>
   );
 }
 // Helper Components for Inspector
@@ -1481,33 +1597,40 @@ function Select({ label, value, onChange, options }) {
 }
 
 // Render Components
-function NavbarSection({ data, theme, onUpdate, isMobileView }) {
+function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className={`flex ${isMobileView ? 'flex-col gap-4 text-center' : 'items-center justify-between'}`}>
       <EditableText
         value={data.logo}
         onChange={(v) => onUpdate({ ...data, logo: v })}
         className={`text-2xl font-black tracking-tighter ${theme.text}`}
+        previewMode={previewMode}
       />
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'gap-10'}`}>
         {data.links?.map((link, idx) => (
-          <EditableText
-            key={idx}
-            value={link}
-            onChange={(v) => {
-              const newLinks = [...data.links];
-              newLinks[idx] = v;
-              onUpdate({ ...data, links: newLinks });
-            }}
-            className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`}
-          />
+          <a key={idx} href={link.href || '#'} onClick={(e) => link.href === '#' && e.preventDefault()}>
+            <EditableText
+              value={link.label || link}
+              onChange={(v) => {
+                const newLinks = [...data.links];
+                if (typeof link === 'string') {
+                    newLinks[idx] = v;
+                } else {
+                    newLinks[idx] = { ...link, label: v };
+                }
+                onUpdate({ ...data, links: newLinks });
+              }}
+              className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`}
+              previewMode={previewMode}
+            />
+          </a>
         ))}
       </div>
     </div>
   );
 }
 
-function HeroSection({ data, theme, onUpdate }) {
+function HeroSection({ data, theme, onUpdate, previewMode }) {
   const alignClass = data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left';
   const marginClass = data.align === 'center' ? 'mx-auto' : data.align === 'right' ? 'ml-auto' : 'mr-auto';
 
@@ -1518,50 +1641,56 @@ function HeroSection({ data, theme, onUpdate }) {
         animate={{ opacity: 1, y: 0 }}
         className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${marginClass} ${theme.text}`}
       >
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
       </motion.h1>
       <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text}`}>
-        <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" />
+        <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" previewMode={previewMode} />
       </div>
-      <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
-        <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} />
-      </button>
+      <a 
+        href={data.buttonHref || '#'} 
+        className="inline-block"
+        onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
+      >
+        <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
+          <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} previewMode={previewMode} />
+        </button>
+      </a>
     </div>
   );
 }
 
-function RichTextSection({ data, theme, onUpdate }) {
+function RichTextSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className={`${data.align === 'center' ? 'text-center' : ''}`}>
       <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
       </h2>
       <div className={`text-xl leading-loose opacity-70 ${theme.text} whitespace-pre-line font-medium`}>
-        <EditableText value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} type="textarea" />
+        <EditableText value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} type="textarea" previewMode={previewMode} />
       </div>
     </div>
   );
 }
 
-function TextSection({ data, theme, onUpdate }) {
+function TextSection({ data, theme, onUpdate, previewMode }) {
   const sizeMap = {
     xs: 'text-xs', sm: 'text-sm', base: 'text-base', lg: 'text-lg', xl: 'text-xl', '2xl': 'text-2xl', '3xl': 'text-3xl'
   };
   return (
     <div className={`${data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left'}`}>
       <div className={`${sizeMap[data.fontSize] || 'text-base'} ${theme.text} opacity-80 leading-relaxed`}>
-        <EditableText value={data.content} onChange={(v) => onUpdate({ ...data, content: v })} type="textarea" />
+        <EditableText value={data.content} onChange={(v) => onUpdate({ ...data, content: v })} type="textarea" previewMode={previewMode} />
       </div>
     </div>
   );
 }
 
 
-function CardsSection({ data, theme, onUpdate, isMobileView }) {
+function CardsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className={`grid gap-8 ${isMobileView ? 'grid-cols-1' : (data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4')}`}>
       {Array(data.count).fill(0).map((_, i) => (
-        <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02]`}>
+        <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02] flex flex-col`}>
           <div className="h-48 mb-6 overflow-hidden rounded-2xl">
             <img src={data.imageUrls[i]} alt={data.titles[i]} className="w-full h-full object-cover" />
           </div>
@@ -1570,22 +1699,33 @@ function CardsSection({ data, theme, onUpdate, isMobileView }) {
               const newTitles = [...data.titles];
               newTitles[i] = v;
               onUpdate({ ...data, titles: newTitles });
-            }} />
+            }} previewMode={previewMode} />
           </h3>
-          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
+          <div className={`text-sm opacity-60 leading-relaxed ${theme.text} mb-6 flex-grow`}>
             <EditableText value={data.descriptions[i]} onChange={(v) => {
               const newDesc = [...data.descriptions];
               newDesc[i] = v;
               onUpdate({ ...data, descriptions: newDesc });
-            }} type="textarea" />
+            }} type="textarea" previewMode={previewMode} />
           </div>
+          {data.buttonLabel && (
+            <a 
+              href={data.buttonHref || '#'} 
+              className="mt-auto"
+              onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
+            >
+               <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
+                {data.buttonLabel}
+              </button>
+            </a>
+          )}
         </div>
       ))}
     </div>
   );
 }
 
-function TestimonialsSection({ data, theme, onUpdate }) {
+function TestimonialsSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className="grid gap-12 max-w-5xl mx-auto">
       {data.items.map((item, i) => (
@@ -1596,21 +1736,21 @@ function TestimonialsSection({ data, theme, onUpdate }) {
               const newItems = [...data.items];
               newItems[i].quote = v;
               onUpdate({ ...data, items: newItems });
-            }} type="textarea" />
+            }} type="textarea" previewMode={previewMode} />
           </div>
           <h4 className={`text-sm font-bold uppercase tracking-widest ${theme.text}`}>
             <EditableText value={item.name} onChange={(v) => {
               const newItems = [...data.items];
               newItems[i].name = v;
               onUpdate({ ...data, items: newItems });
-            }} />
+            }} previewMode={previewMode} />
           </h4>
           <div className={`text-[10px] font-bold opacity-40 uppercase tracking-widest mt-1 ${theme.text}`}>
             <EditableText value={item.role} onChange={(v) => {
               const newItems = [...data.items];
               newItems[i].role = v;
               onUpdate({ ...data, items: newItems });
-            }} />
+            }} previewMode={previewMode} />
           </div>
         </div>
       ))}
@@ -1618,26 +1758,26 @@ function TestimonialsSection({ data, theme, onUpdate }) {
   );
 }
 
-function PricingSection({ data, theme, onUpdate, isMobileView }) {
+function PricingSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
       {data.plans.map((plan, i) => (
-        <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary}`}>
+        <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary} flex flex-col`}>
           <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text}`}>
             <EditableText value={plan.name} onChange={(v) => {
               const newPlans = [...data.plans];
               newPlans[i].name = v;
               onUpdate({ ...data, plans: newPlans });
-            }} />
+            }} previewMode={previewMode} />
           </div>
           <div className={`text-5xl font-black mb-8 ${theme.text}`}>
             <EditableText value={plan.price} onChange={(v) => {
               const newPlans = [...data.plans];
               newPlans[i].price = v;
               onUpdate({ ...data, plans: newPlans });
-            }} />
+            }} previewMode={previewMode} />
           </div>
-          <ul className="space-y-4 mb-10">
+          <ul className="space-y-4 mb-10 flex-grow">
             {plan.features.map((f, idx) => (
               <li key={idx} className={`text-sm font-bold opacity-60 flex items-center gap-3 ${theme.text}`}>
                 <Check className="w-4 h-4 text-indigo-500" />
@@ -1645,40 +1785,52 @@ function PricingSection({ data, theme, onUpdate, isMobileView }) {
                   const newPlans = [...data.plans];
                   newPlans[i].features[idx] = v;
                   onUpdate({ ...data, plans: newPlans });
-                }} />
+                }} previewMode={previewMode} />
               </li>
             ))}
           </ul>
-          <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>Get Started</button>
+          <a 
+            href={plan.buttonHref || '#'} 
+            className="w-full"
+            onClick={(e) => (!plan.buttonHref || plan.buttonHref === '#') && e.preventDefault()}
+          >
+            <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+              <EditableText value={plan.buttonLabel || 'Get Started'} onChange={(v) => {
+                const newPlans = [...data.plans];
+                newPlans[i].buttonLabel = v;
+                onUpdate({ ...data, plans: newPlans });
+              }} previewMode={previewMode} />
+            </button>
+          </a>
         </div>
       ))}
     </div>
   );
 }
 
-function ContactSection({ data, theme, onUpdate, isMobileView }) {
+function ContactSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className="max-w-4xl mx-auto text-center">
       <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
       </h2>
       <div className={`grid ${isMobileView ? 'grid-cols-1 gap-8' : 'grid-cols-3 gap-12'}`}>
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Email</p>
           <div className={`text-sm font-bold ${theme.text}`}>
-            <EditableText value={data.email} onChange={(v) => onUpdate({ ...data, email: v })} />
+            <EditableText value={data.email} onChange={(v) => onUpdate({ ...data, email: v })} previewMode={previewMode} />
           </div>
         </div>
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Phone</p>
           <div className={`text-sm font-bold ${theme.text}`}>
-            <EditableText value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} />
+            <EditableText value={data.phone} onChange={(v) => onUpdate({ ...data, phone: v })} previewMode={previewMode} />
           </div>
         </div>
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Address</p>
           <div className={`text-sm font-bold ${theme.text}`}>
-            <EditableText value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} />
+            <EditableText value={data.address} onChange={(v) => onUpdate({ ...data, address: v })} previewMode={previewMode} />
           </div>
         </div>
       </div>
@@ -1686,14 +1838,14 @@ function ContactSection({ data, theme, onUpdate, isMobileView }) {
   );
 }
 
-function LogoGridSection({ data, theme, onUpdate, isMobileView }) {
+function LogoGridSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4', 5: 'grid-cols-5', 6: 'grid-cols-6' };
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-2 gap-8' : (colMap[data.columns] || 'grid-cols-4 gap-12')} items-center`}>
       {data.logos.map((logo, i) => (
         <div key={i} className="relative group/logo">
           <img src={logo} className="w-full opacity-40 grayscale group-hover/logo:grayscale-0 group-hover/logo:opacity-100 transition-all cursor-pointer" alt="Client Logo" />
-          {onUpdate && (
+          {onUpdate && !previewMode && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/logo:opacity-100 transition-opacity bg-black/40 rounded-lg pointer-events-none">
               <span className="text-[8px] font-bold text-white uppercase">Replace in Sidebar</span>
             </div>
@@ -1704,11 +1856,11 @@ function LogoGridSection({ data, theme, onUpdate, isMobileView }) {
   );
 }
 
-function VideoSection({ data, theme, onUpdate }) {
+function VideoSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className="max-w-5xl mx-auto">
       <h2 className={`text-4xl font-black mb-12 tracking-tight text-center ${theme.text}`}>
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} />
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
       </h2>
       <div className="aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/10">
         <iframe className="w-full h-full" src={data.videoUrl} title="Video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
@@ -1717,23 +1869,29 @@ function VideoSection({ data, theme, onUpdate }) {
   );
 }
 
-function ButtonsSection({ data, theme, onUpdate, isMobileView }) {
+function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className={`flex gap-6 ${isMobileView ? 'flex-col items-center' : (data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start')}`}>
       {data.buttons.map((btn, i) => (
-        <button key={i} className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
-          <EditableText value={btn.label} onChange={(v) => {
-            const newBtns = [...data.buttons];
-            newBtns[i].label = v;
-            onUpdate({ ...data, buttons: newBtns });
-          }} />
-        </button>
+        <a 
+          key={i} 
+          href={btn.href || '#'} 
+          onClick={(e) => (!btn.href || btn.href === '#') && e.preventDefault()}
+        >
+          <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+            <EditableText value={btn.label} onChange={(v) => {
+              const newBtns = [...data.buttons];
+              newBtns[i].label = v;
+              onUpdate({ ...data, buttons: newBtns });
+            }} previewMode={previewMode} />
+          </button>
+        </a>
       ))}
     </div>
   );
 }
 
-function FeaturesSection({ data, theme, onUpdate, isMobileView }) {
+function FeaturesSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' };
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-1' : (colMap[data.columns] || 'grid-cols-3')} gap-16`}>
@@ -1747,14 +1905,14 @@ function FeaturesSection({ data, theme, onUpdate, isMobileView }) {
               const newItems = [...data.items];
               newItems[i].title = v;
               onUpdate({ ...data, items: newItems });
-            }} />
+            }} previewMode={previewMode} />
           </h3>
           <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
             <EditableText value={item.description} onChange={(v) => {
               const newItems = [...data.items];
               newItems[i].description = v;
               onUpdate({ ...data, items: newItems });
-            }} type="textarea" />
+            }} type="textarea" previewMode={previewMode} />
           </div>
         </div>
       ))}
@@ -1763,7 +1921,7 @@ function FeaturesSection({ data, theme, onUpdate, isMobileView }) {
 }
 
 
-function FAQSection({ data, theme, onUpdate }) {
+function FAQSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className="max-w-3xl mx-auto space-y-4">
       {data.items.map((item, i) => (
@@ -1773,14 +1931,14 @@ function FAQSection({ data, theme, onUpdate }) {
               const newItems = [...data.items];
               newItems[i].question = v;
               onUpdate({ ...data, items: newItems });
-            }} />
+            }} previewMode={previewMode} />
           </h4>
           <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
             <EditableText value={item.answer} onChange={(v) => {
               const newItems = [...data.items];
               newItems[i].answer = v;
               onUpdate({ ...data, items: newItems });
-            }} type="textarea" />
+            }} type="textarea" previewMode={previewMode} />
           </div>
         </div>
       ))}
@@ -1797,17 +1955,17 @@ function DividerSection({ data, theme }) {
   );
 }
 
-function FooterSection({ data, theme, onUpdate }) {
+function FooterSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className={`text-center opacity-50`}>
       <div className={`text-xs font-bold uppercase tracking-widest ${theme.text}`}>
-        <EditableText value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} />
+        <EditableText value={data.text} onChange={(v) => onUpdate({ ...data, text: v })} previewMode={previewMode} />
       </div>
     </div>
   );
 }
 // ADDING COMPONENT
-function TimelineSection({ data, theme, onUpdate }) {
+function TimelineSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className={`${data.py}`}>
       <div className="space-y-6">
@@ -1825,6 +1983,7 @@ function TimelineSection({ data, theme, onUpdate }) {
                   onUpdate({ ...data, items });
                 }}
                 className={`text-lg font-semibold ${theme.text}`}
+                previewMode={previewMode}
               />
               <EditableText
                 value={item.description}
@@ -1834,6 +1993,7 @@ function TimelineSection({ data, theme, onUpdate }) {
                   onUpdate({ ...data, items });
                 }}
                 className={`opacity-70 ${theme.text}`}
+                previewMode={previewMode}
               />
             </div>
           </div>
@@ -1843,7 +2003,7 @@ function TimelineSection({ data, theme, onUpdate }) {
   );
 }
 
-function FeaturesGridSection({ data, theme, onUpdate }) {
+function FeaturesGridSection({ data, theme, onUpdate, previewMode }) {
   const updateItem = (index, key, value) => {
     const items = [...data.items];
     items[index] = { ...items[index], [key]: value };
@@ -1869,12 +2029,14 @@ function FeaturesGridSection({ data, theme, onUpdate }) {
               value={item.title}
               onChange={(v) => updateItem(idx, 'title', v)}
               className={`text-lg font-bold mb-2 ${theme.text}`}
+              previewMode={previewMode}
             />
 
             <EditableText
               value={item.description}
               onChange={(v) => updateItem(idx, 'description', v)}
               className={`text-sm opacity-70 ${theme.text}`}
+              previewMode={previewMode}
             />
           </div>
         ))}
@@ -1883,7 +2045,7 @@ function FeaturesGridSection({ data, theme, onUpdate }) {
   );
 }
 
-function StatsSection({ data, theme, onUpdate }) {
+function StatsSection({ data, theme, onUpdate, previewMode }) {
   const updateStat = (index, key, value) => {
     const stats = [...data.stats];
     stats[index] = { ...stats[index], [key]: value };
@@ -1907,12 +2069,14 @@ function StatsSection({ data, theme, onUpdate }) {
               value={stat.value}
               onChange={(v) => updateStat(idx, 'value', v)}
               className={`text-4xl font-black mb-2 ${theme.text}`}
+              previewMode={previewMode}
             />
 
             <EditableText
               value={stat.label}
               onChange={(v) => updateStat(idx, 'label', v)}
               className={`text-xs uppercase tracking-widest opacity-60 ${theme.text}`}
+              previewMode={previewMode}
             />
           </div>
         ))}
@@ -1921,7 +2085,7 @@ function StatsSection({ data, theme, onUpdate }) {
   );
 }
 
-function CTASection({ data, theme, onUpdate }) {
+function CTASection({ data, theme, onUpdate, previewMode }) {
   const updateField = (key, value) => {
     onUpdate({ ...data, [key]: value });
   };
@@ -1935,30 +2099,38 @@ function CTASection({ data, theme, onUpdate }) {
           value={data.heading}
           onChange={(v) => updateField('heading', v)}
           className={`text-3xl font-black mb-4 ${theme.text}`}
+          previewMode={previewMode}
         />
 
         <EditableText
           value={data.supportingText}
           onChange={(v) => updateField('supportingText', v)}
           className={`text-sm opacity-70 mb-8 ${theme.text}`}
+          previewMode={previewMode}
         />
 
-        <button
-          className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
-            }`}
+        <a 
+          href={data.buttonHref || '#'} 
+          onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
         >
-          <EditableText
-            value={data.button}
-            onChange={(v) => updateField('button', v)}
-            className="outline-none"
-          />
-        </button>
+          <button
+            className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
+              }`}
+          >
+            <EditableText
+              value={data.button}
+              onChange={(v) => updateField('button', v)}
+              className="outline-none"
+              previewMode={previewMode}
+            />
+          </button>
+        </a>
       </div>
     </div>
   );
 }
 
-function ImageSection({ data, theme, onUpdate }) {
+function ImageSection({ data, theme, onUpdate, previewMode }) {
   const updateField = (key, value) => {
     onUpdate({ ...data, [key]: value });
   };
@@ -1986,6 +2158,7 @@ function ImageSection({ data, theme, onUpdate }) {
             <EditableText
               value={data.caption}
               onChange={(v) => updateField('caption', v)}
+              previewMode={previewMode}
             />
           </div>
         )}
@@ -1993,5 +2166,4 @@ function ImageSection({ data, theme, onUpdate }) {
     </div>
   );
 }
-
 export default CanvaEditor;
