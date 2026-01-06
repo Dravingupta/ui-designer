@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -18,8 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
-import { useRef } from 'react'; // Added useRef explicitly if not present
-// IMPORT NEW COMPONENTS 
+
 
 
 // Theme definitions
@@ -58,7 +57,9 @@ const elementCategories = {
   Content: [
     { type: 'hero', label: 'Hero', icon: Layers, desc: 'Main landing section' },
     { type: 'richtext', label: 'Rich Text', icon: Edit3, desc: 'Advanced text block' },
+    { type: 'text', label: 'Text', icon: Type, desc: 'Simple text block' },
     { type: 'features', label: 'Features', icon: Grid, desc: 'Feature highlights' },
+    { type: 'featuresgrid', label: 'Features Grid', icon: Layout, desc: 'Grid of features' },
     { type: 'faq', label: 'FAQ', icon: HelpCircle, desc: 'Questions & Answers' },
     { type: 'timeline', label: 'Timeline', icon: Clock, desc: 'Chronological steps' },
     { type: 'stats', label: 'Stats', icon: BarChart3, desc: 'Numerical statistics' },
@@ -93,7 +94,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     name: initialData?.name || 'Untitled Design',
     selectedSectionId: null,
     theme: initialData?.theme || 'light',
-    theme: initialData?.theme || 'light',
+
     layout: initialData?.layout || []
   });
   const [activeTab, setActiveTab] = useState('components');
@@ -250,6 +251,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       video: { ...common, heading: 'Product Demo', videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
       buttons: { ...common, buttons: [{ label: 'Action 1', href: '#' }, { label: 'Action 2', href: '#' }], align: 'center', py: 'py-12' },
       features: { ...common, items: [{ title: 'Power', description: 'AI generated code' }], columns: 3 },
+      featuresgrid: { ...common, items: Array(4).fill({ title: 'Feature Title', description: 'Description text goes here.' }), columns: 2, py: 'py-24' },
       stats: { ...common, stats: [{ label: 'Users', value: '1M+' }], py: 'py-16' },
       cta: { ...common, heading: 'Ready?', supportingText: 'Join us today.', button: 'Sign Up', buttonHref: '#', py: 'py-24' },
       faq: { ...common, items: [{ question: 'Is it fast?', answer: 'Yes, incredibly.' }] },
@@ -1395,6 +1397,32 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           </div>
         )}
 
+        {type === 'featuresgrid' && (
+          <div className="space-y-4">
+            {data.items.map((item, i) => (
+              <div key={i} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-2 relative group mt-2">
+                <Input label="Title" value={item.title} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, title: v };
+                  update('items', newItems);
+                }} />
+                <Textarea label="Description" value={item.description} onChange={(v) => {
+                  const newItems = [...data.items];
+                  newItems[i] = { ...item, description: v };
+                  update('items', newItems);
+                }} rows={2} />
+                <button 
+                  onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button onClick={() => update('items', [...data.items, { title: 'New Feature', description: 'Brief description' }])} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Grid Item</button>
+          </div>
+        )}
+
         {type === 'logogrid' && (
           <div className="space-y-4">
             <ControlGroup label="Logo Items">
@@ -1555,7 +1583,7 @@ function Input({ label, value, onChange, placeholder }) {
       <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
       <input
         type="text"
-        value={value}
+        value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 placeholder:text-zinc-700 font-medium"
@@ -1569,7 +1597,7 @@ function Textarea({ label, value, onChange, rows = 3 }) {
     <div className="space-y-1.5 group">
       <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
       <textarea
-        value={value}
+        value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
         className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 resize-none scrollbar-hide font-medium leading-relaxed"
@@ -1584,7 +1612,7 @@ function Select({ label, value, onChange, options }) {
       <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
       <div className="relative">
         <select
-          value={value}
+          value={value || ''}
           onChange={(e) => onChange(e.target.value)}
           className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 cursor-pointer appearance-none"
         >
