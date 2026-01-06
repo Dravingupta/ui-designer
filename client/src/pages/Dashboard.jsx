@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
+import Loader from '../components/Loader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Layout, Trash2, Edit3, LogOut, Clock, Layers, Copy, Globe, Lock, X } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState('New Project');
   const [isNewProjectPublic, setIsNewProjectPublic] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,6 +23,7 @@ const Dashboard = () => {
 
   const fetchData = async () => {
     if (!user) return;
+    setLoading(true);
     try {
       if (activeTab === 'projects') {
         const response = await api.get('/projects');
@@ -31,6 +34,8 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Failed to fetch data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -146,7 +151,11 @@ const Dashboard = () => {
 
       {/* Grid */}
       <main className="flex-1 p-8 max-w-7xl mx-auto w-full relative z-10">
-        {displayedItems.length === 0 ? (
+        {loading ? (
+          <div className="h-64 relative">
+            <Loader fullScreen={false} message="Synchronizing_Data..." />
+          </div>
+        ) : displayedItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 border border-dashed border-white/10 rounded-lg mt-8 bg-white/[0.02]">
             <Layout className="w-10 h-10 text-gray-700 mb-4" />
             <p className="text-gray-500 font-mono text-sm uppercase tracking-wide">

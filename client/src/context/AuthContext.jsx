@@ -7,6 +7,8 @@ import {
 } from 'firebase/auth';
 import { auth } from '../firebase';
 
+import Loader from '../components/Loader';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -42,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, googleLogin, logout, loading }}>
-      {!loading && children}
+      {loading ? <Loader message="Verifying_Credentials..." /> : children}
     </AuthContext.Provider>
   );
 };
