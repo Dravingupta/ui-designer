@@ -132,9 +132,16 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   );
 
   // Page Management
-  const handleSwitchPage = (pageId) => {
+  const handleSwitchPage = (pageId, forcePage = null) => {
     if (pageId === activePageId) return;
-    const customPage = pages.find(p => p.id === pageId);
+
+    // 1. Explicitly save current page layout before switching
+    // This ensures we capture the latest state even if useEffect hasn't run yet
+    setPages(prev => prev.map(p =>
+      p.id === activePageId ? { ...p, layout: state.layout } : p
+    ));
+
+    const customPage = forcePage || pages.find(p => p.id === pageId);
     if (!customPage) return;
 
     setActivePageId(pageId);
@@ -154,7 +161,8 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     };
 
     setPages(prev => [...prev, newPage]);
-    handleSwitchPage(newId);
+    // Pass the new page object explicitly to avoid race condition with state update
+    handleSwitchPage(newId, newPage);
   };
 
   const handleDeletePage = (pageId, e) => {
