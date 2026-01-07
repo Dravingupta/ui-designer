@@ -849,7 +849,7 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
   );
 }
 
-const SectionRenderer = ({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode }) => {
+function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode }) {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
