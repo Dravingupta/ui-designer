@@ -12,9 +12,17 @@ const projectSchema = new mongoose.Schema({
         required: true
     },
     layout: {
-        type: Object,
-        required: true
+        type: Array,
+        default: []
     },
+    pages: [{
+        id: String,
+        name: String,
+        route: String,
+        layout: Array,
+        generatedCode: String
+    }],
+    activePageId: String,
     theme: {
         type: String,
         default: 'light'

@@ -36,6 +36,8 @@ const EditorPage = () => {
       await api.put(`/projects/${id}`, {
         name: updatedProject.name,
         layout: updatedProject.layout,
+        pages: updatedProject.pages,
+        activePageId: updatedProject.activePageId,
         theme: updatedProject.theme
       });
       setProject(updatedProject);

@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 
@@ -90,13 +90,26 @@ const themeGroups = {
 };
 
 function CanvaEditor({ initialData, projectId, onSave, onBack }) {
+  const [pages, setPages] = useState(initialData?.pages?.length > 0 ? initialData.pages : [
+    { id: 'home', name: 'Home', route: '/', layout: initialData?.layout || [] }
+  ]);
+  const [activePageId, setActivePageId] = useState(initialData?.activePageId || pages[0].id);
+
+  const activePage = pages.find(p => p.id === activePageId) || pages[0];
+
   const [state, setState] = useState({
     name: initialData?.name || 'Untitled Design',
     selectedSectionId: null,
     theme: initialData?.theme || 'light',
-
-    layout: initialData?.layout || []
+    layout: activePage.layout || []
   });
+
+  // Sync layout changes back to pages state
+  useEffect(() => {
+    setPages(prev => prev.map(p =>
+      p.id === activePageId ? { ...p, layout: state.layout } : p
+    ));
+  }, [state.layout]); // Only sync when layout changes, not when page ID changes
   const [activeTab, setActiveTab] = useState('components');
   const [activeSection, setActiveSection] = useState('Content');
   const [searchQuery, setSearchQuery] = useState('');
@@ -118,12 +131,66 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     })
   );
 
+  // Page Management
+  const handleSwitchPage = (pageId) => {
+    if (pageId === activePageId) return;
+    const customPage = pages.find(p => p.id === pageId);
+    if (!customPage) return;
+
+    setActivePageId(pageId);
+    setState(prev => ({
+      ...prev,
+      layout: customPage.layout || [] // Load new page layout
+    }));
+  };
+
+  const handleAddPage = () => {
+    const newId = `page-${Date.now()}`;
+    const newPage = {
+      id: newId,
+      name: `Page ${pages.length + 1}`,
+      route: `/page-${pages.length + 1}`,
+      layout: []
+    };
+
+    setPages(prev => [...prev, newPage]);
+    handleSwitchPage(newId);
+  };
+
+  const handleDeletePage = (pageId, e) => {
+    e.stopPropagation();
+    if (pages.length <= 1) {
+      alert("Cannot delete the last page.");
+      return;
+    }
+
+    if (pageId === activePageId) {
+      const newActive = pages.find(p => p.id !== pageId);
+      handleSwitchPage(newActive.id);
+    }
+
+    setPages(prev => prev.filter(p => p.id !== pageId));
+  };
+
+  const handleRenamePage = (pageId, newName) => {
+    setPages(prev => prev.map(p =>
+      p.id === pageId ? {
+        ...p,
+        name: newName,
+        route: newName.toLowerCase() === 'home' ? '/' : `/${newName.toLowerCase().replace(/\s+/g, '-')}`
+      } : p
+    ));
+  };
+
+
   const handleSave = async () => {
     setIsSaving(true);
     await onSave({
       name: state.name,
       theme: state.theme,
-      layout: state.layout
+      layout: state.layout, // Keep for backward compat/current view
+      pages: pages,
+      activePageId: activePageId
     });
     setTimeout(() => setIsSaving(false), 800);
   };
@@ -450,6 +517,12 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                 label="Elements"
               />
               <NavRailButton
+                active={activeTab === 'pages'}
+                onClick={() => setActiveTab(activeTab === 'pages' ? null : 'pages')}
+                icon={<FileText className="w-5 h-5" />}
+                label="Pages"
+              />
+              <NavRailButton
                 active={activeTab === 'themes'}
                 onClick={() => setActiveTab(activeTab === 'themes' ? null : 'themes')}
                 icon={<Layers className="w-5 h-5" />}
@@ -545,6 +618,68 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                           ))}
                         </div>
                       )}
+                    </div>
+                  </>
+                )}
+
+                {activeTab === 'pages' && (
+                  <>
+                    <div className="p-5 border-b border-white/5 bg-[#0F0F0F] sticky top-0 z-10 flex justify-between items-center">
+                      <div>
+                        <h2 className="text-sm font-bold text-white">Pages</h2>
+                        <p className="text-[10px] text-zinc-500 mt-1">Manage website pages</p>
+                      </div>
+                      <button
+                        onClick={handleAddPage}
+                        className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white transition-colors"
+                        title="Add Page"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4 scrollbar-hide space-y-2">
+                      {pages.map(page => (
+                        <div
+                          key={page.id}
+                          onClick={() => handleSwitchPage(page.id)}
+                          className={`group p-3 rounded-xl border transition-all cursor-pointer relative ${activePageId === page.id
+                              ? 'bg-cyan-500/10 border-cyan-500/50'
+                              : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
+                            }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <FileText className={`w-4 h-4 ${activePageId === page.id ? 'text-cyan-400' : 'text-zinc-500'}`} />
+                              <input
+                                className="bg-transparent text-sm font-bold text-white focus:outline-none w-28"
+                                value={page.name}
+                                onChange={(e) => handleRenamePage(page.id, e.target.value)}
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            </div>
+                            {pages.length > 1 && (
+                              <button
+                                onClick={(e) => handleDeletePage(page.id, e)}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 text-zinc-500 hover:text-red-400 rounded transition-all"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
+                            <span className="bg-black/20 px-1.5 py-0.5 rounded text-zinc-400">{page.route}</span>
+                            <span>{Math.round(JSON.stringify(page.layout).length / 1024 * 10) / 10}KB</span>
+                          </div>
+
+                          {activePageId === page.id && (
+                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-cyan-400 rounded-l-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                          )}
+                        </div>
+                      ))}
+
+                      <div className="mt-8 p-4 border border-dashed border-white/10 rounded-xl text-center">
+                        <p className="text-[10px] text-zinc-500 mb-2">Each page has its own layout.</p>
+                      </div>
                     </div>
                   </>
                 )}
