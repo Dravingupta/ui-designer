@@ -108,11 +108,13 @@ router.put('/:id', verifyFirebaseToken, async (req, res, next) => {
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        const { name, layout, theme } = req.body;
+        const { name, layout, theme, pages, activePageId } = req.body;
 
         if (name) project.name = name;
         if (layout) project.layout = layout;
         if (theme) project.theme = theme;
+        if (pages) project.pages = pages;
+        if (activePageId) project.activePageId = activePageId;
 
         await project.save();
         res.json(project);

@@ -213,6 +213,9 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const handleExport = async () => {
     setIsExporting(true);
     try {
+      // Auto-save before exporting to ensure backend has latest data
+      await handleSave();
+
       const response = await api.post(`/generate/${projectId}`);
 
       // Convert base64 to blob
