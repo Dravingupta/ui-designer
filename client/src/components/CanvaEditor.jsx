@@ -206,45 +206,45 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     };
 
     const defaults = {
-      navbar: { 
-        ...common, 
-        logo: 'DESIGNER', 
+      navbar: {
+        ...common,
+        logo: 'DESIGNER',
         links: [
           { label: 'Home', href: '#' },
           { label: 'Features', href: '#features' },
           { label: 'Pricing', href: '#pricing' }
-        ], 
-        sticky: false, 
-        py: 'py-8' 
+        ],
+        sticky: false,
+        py: 'py-8'
       },
-      hero: { 
-        ...common, 
-        heading: 'Design something amazing', 
-        subheading: 'Your vision, powered by AI components.', 
-        button: 'Get Started', 
+      hero: {
+        ...common,
+        heading: 'Design something amazing',
+        subheading: 'Your vision, powered by AI components.',
+        button: 'Get Started',
         buttonHref: '#',
-        align: 'center', 
-        py: 'py-40' 
+        align: 'center',
+        py: 'py-40'
       },
       richtext: { ...common, heading: 'Our Story', body: 'Start telling your story here.', align: 'left' },
       text: { ...common, content: 'This is a text block.', fontSize: 'base', align: 'left', py: 'py-8' },
       image: { ...common, url: '', height: 400, caption: 'Beautiful Image', fullWidth: false },
-      cards: { 
-        ...common, 
-        count: 3, 
-        titles: Array(3).fill('Card Title'), 
-        descriptions: Array(3).fill('Card description text goes here.'), 
+      cards: {
+        ...common,
+        count: 3,
+        titles: Array(3).fill('Card Title'),
+        descriptions: Array(3).fill('Card description text goes here.'),
         imageUrls: Array(3).fill('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=400&q=80'),
         buttonLabel: 'Learn More',
         buttonHref: '#'
       },
       testimonials: { ...common, items: [{ name: 'Alex Rivera', role: 'Founder', quote: 'This builder is game changing!', imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=100&h=100&q=80' }] },
-      pricing: { 
-        ...common, 
+      pricing: {
+        ...common,
         plans: [
-          { name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false, buttonLabel: 'Get Started', buttonHref: '#' }, 
+          { name: 'Base', price: '$0', features: ['Feature 1'], highlighted: false, buttonLabel: 'Get Started', buttonHref: '#' },
           { name: 'Pro', price: '$29', features: ['All Features', 'Support'], highlighted: true, buttonLabel: 'Go Pro', buttonHref: '#' }
-        ] 
+        ]
       },
       contact: { ...common, heading: 'Contact Us', email: 'hi@example.com', phone: '+1 234 567 890', address: '123 Studio St' },
       logogrid: { ...common, logos: Array(4).fill('https://via.placeholder.com/120x60/eeeeee/999999?text=LOGO'), columns: 4 },
@@ -339,7 +339,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   };
 
   const selectedSection = state.layout.find(el => el.id === state.selectedSectionId);
-  const currentTheme = themes[state.theme];
+  const currentTheme = themes[state.theme] || themes.light;
 
   return (
     <div className="h-screen bg-[#0A0A0A] flex flex-col text-gray-200 selection:bg-cyan-500/30 overflow-hidden font-sans">
@@ -876,6 +876,11 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
     featuresgrid: FeaturesGridSection,
   };
 
+  // Mobile Override Logic
+  const displayData = isMobileView
+    ? { ...data, py: 'py-12', px: 'px-4' }
+    : data;
+
   const Component = components[type] || (({ type, theme }) => (
     <div className={`py-16 px-12 text-center border-y border-dashed ${theme.border} opacity-50`}>
       <p className={`text-sm font-bold uppercase tracking-widest ${theme.text}`}>Previewing: {type}</p>
@@ -905,11 +910,6 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
     slideLeft: { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 } },
     slideRight: { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
   };
-
-  // Mobile Override Logic
-  const displayData = isMobileView
-    ? { ...data, py: 'py-12', px: 'px-4' }
-    : data;
 
   const anim = animations[displayData.animation] || animations.none;
 
@@ -1113,7 +1113,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     newLinks[i] = { ...link, href: v };
                     update('links', newLinks);
                   }} />
-                  <button 
+                  <button
                     onClick={() => update('links', data.links.filter((_, idx) => idx !== i))}
                     className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                   >
@@ -1171,7 +1171,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newBtns[i] = { ...btn, href: v };
                   update('buttons', newBtns);
                 }} />
-                <button 
+                <button
                   onClick={() => update('buttons', data.buttons.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1217,7 +1217,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   }} className="rounded border-white/20 bg-zinc-800" />
                   <span className="text-xs text-zinc-400">Highlighted Plan</span>
                 </div>
-                <button 
+                <button
                   onClick={() => update('plans', data.plans.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1253,7 +1253,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, imageUrl: v };
                   update('items', newItems);
                 }} />
-                <button 
+                <button
                   onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1279,7 +1279,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, description: v };
                   update('items', newItems);
                 }} rows={2} />
-                <button 
+                <button
                   onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1322,12 +1322,12 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     newImgs[i] = v;
                     update('imageUrls', newImgs);
                   }} />
-                  <button 
+                  <button
                     onClick={() => {
-                        const newTitles = data.titles.filter((_, idx) => idx !== i);
-                        const newDesc = data.descriptions.filter((_, idx) => idx !== i);
-                        const newImgs = data.imageUrls.filter((_, idx) => idx !== i);
-                        onUpdate({ ...data, count: newTitles.length, titles: newTitles, descriptions: newDesc, imageUrls: newImgs });
+                      const newTitles = data.titles.filter((_, idx) => idx !== i);
+                      const newDesc = data.descriptions.filter((_, idx) => idx !== i);
+                      const newImgs = data.imageUrls.filter((_, idx) => idx !== i);
+                      onUpdate({ ...data, count: newTitles.length, titles: newTitles, descriptions: newDesc, imageUrls: newImgs });
                     }}
                     className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                   >
@@ -1336,10 +1336,10 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                 </div>
               ))}
               <button onClick={() => {
-                  update('titles', [...data.titles, 'New Card']);
-                  update('descriptions', [...data.descriptions, 'New description']);
-                  update('imageUrls', [...data.imageUrls, '']);
-                  update('count', data.count + 1);
+                update('titles', [...data.titles, 'New Card']);
+                update('descriptions', [...data.descriptions, 'New description']);
+                update('imageUrls', [...data.imageUrls, '']);
+                update('count', data.count + 1);
               }} className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2">+ Add Card</button>
             </div>
           </>
@@ -1359,7 +1359,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newStats[i] = { ...stat, value: v };
                   update('stats', newStats);
                 }} />
-                <button 
+                <button
                   onClick={() => update('stats', data.stats.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1385,7 +1385,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, description: v };
                   update('items', newItems);
                 }} rows={2} />
-                <button 
+                <button
                   onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1411,7 +1411,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newItems[i] = { ...item, description: v };
                   update('items', newItems);
                 }} rows={2} />
-                <button 
+                <button
                   onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
@@ -1492,7 +1492,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                 }} rows={3} />
                 <button
                   onClick={() => update('items', data.items.filter((_, idx) => idx !== i))}
-                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -1642,9 +1642,9 @@ function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode }) {
               onChange={(v) => {
                 const newLinks = [...data.links];
                 if (typeof link === 'string') {
-                    newLinks[idx] = v;
+                  newLinks[idx] = v;
                 } else {
-                    newLinks[idx] = { ...link, label: v };
+                  newLinks[idx] = { ...link, label: v };
                 }
                 onUpdate({ ...data, links: newLinks });
               }}
@@ -1674,8 +1674,8 @@ function HeroSection({ data, theme, onUpdate, previewMode }) {
       <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text}`}>
         <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" previewMode={previewMode} />
       </div>
-      <a 
-        href={data.buttonHref || '#'} 
+      <a
+        href={data.buttonHref || '#'}
         className="inline-block"
         onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
       >
@@ -1737,12 +1737,12 @@ function CardsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
             }} type="textarea" previewMode={previewMode} />
           </div>
           {data.buttonLabel && (
-            <a 
-              href={data.buttonHref || '#'} 
+            <a
+              href={data.buttonHref || '#'}
               className="mt-auto"
               onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
             >
-               <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
+              <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
                 {data.buttonLabel}
               </button>
             </a>
@@ -1817,8 +1817,8 @@ function PricingSection({ data, theme, onUpdate, isMobileView, previewMode }) {
               </li>
             ))}
           </ul>
-          <a 
-            href={plan.buttonHref || '#'} 
+          <a
+            href={plan.buttonHref || '#'}
             className="w-full"
             onClick={(e) => (!plan.buttonHref || plan.buttonHref === '#') && e.preventDefault()}
           >
@@ -1901,9 +1901,9 @@ function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   return (
     <div className={`flex gap-6 ${isMobileView ? 'flex-col items-center' : (data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start')}`}>
       {data.buttons.map((btn, i) => (
-        <a 
-          key={i} 
-          href={btn.href || '#'} 
+        <a
+          key={i}
+          href={btn.href || '#'}
           onClick={(e) => (!btn.href || btn.href === '#') && e.preventDefault()}
         >
           <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
@@ -2137,8 +2137,8 @@ function CTASection({ data, theme, onUpdate, previewMode }) {
           previewMode={previewMode}
         />
 
-        <a 
-          href={data.buttonHref || '#'} 
+        <a
+          href={data.buttonHref || '#'}
           onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
         >
           <button
