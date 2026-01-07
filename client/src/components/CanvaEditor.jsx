@@ -193,11 +193,18 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
   const handleSave = async () => {
     setIsSaving(true);
+
+    // Explicitly sync current layout to pages before saving
+    // This ensures the active page in the `pages` array has the latest edits
+    const updatedPages = pages.map(p =>
+      p.id === activePageId ? { ...p, layout: state.layout } : p
+    );
+
     await onSave({
       name: state.name,
       theme: state.theme,
       layout: state.layout, // Keep for backward compat/current view
-      pages: pages,
+      pages: updatedPages,
       activePageId: activePageId
     });
     setTimeout(() => setIsSaving(false), 800);
@@ -515,7 +522,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         {/* Left Sidebar - Nav Rail + Drawer */}
         {!previewMode && (
           // Web: Fixed w-20 (Overlay). Mobile: Expands (Push)
-          <div className={`relative flex h-full shrink-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${isMobileView && activeTab ? 'w-[25rem]' : 'w-20'}`}>
+          <div className={`relative flex h-full shrink-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${activeTab ? 'w-[25rem]' : 'w-20'}`}>
             {/* 1. Navigation Rail (Fixed Icons) */}
             <div className="w-20 bg-[#050505] border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
               <NavRailButton
@@ -544,10 +551,10 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                 bg-[#0F0F0F] border-r border-white/5 flex flex-col 
                 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] 
                 overflow-hidden shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)] z-30
-                ${activeTab ? 'w-80 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
+                ${activeTab ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
              `}>
               {/* Content Container - Fixed Width to prevent internal squashing */}
-              <div className="flex flex-col h-full w-80 min-w-[20rem] bg-[#0F0F0F]">
+              <div className="flex flex-col h-full w-64 min-w-[16rem] bg-[#0F0F0F]">
                 {activeTab === 'components' && (
                   <>
                     {/* Search Header */}
@@ -804,7 +811,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
         {/* Right Sidebar - Inspector */}
         {!previewMode && (
-          <aside className="w-80 bg-[#0F0F0F] border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40">
+          <aside className="w-64 bg-[#0F0F0F] border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40">
             {selectedSection ? (
               <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#0F0F0F]">
                 <Inspector
