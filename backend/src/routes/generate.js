@@ -43,13 +43,19 @@ router.post('/:projectId', async (req, res, next) => {
 
         const generatedPages = [];
 
+        // Create Route Map for Internal Linking
+        const pageRouteMap = pages.reduce((acc, page) => {
+            acc[page.id] = page.route;
+            return acc;
+        }, {});
+
         // Generate code for each page
         for (const page of pages) {
             const pageName = page.name || 'Page';
             const componentName = pageName.replace(/\s+/g, '');
 
-            // Pass page layout to AI
-            const pageCode = await generateCode({ ...page, name: pageName }, project.theme);
+            // Pass page layout and route map to AI
+            const pageCode = await generateCode({ ...page, name: pageName }, project.theme, pageRouteMap);
 
             files[`src/pages/${componentName}.jsx`] = pageCode;
             generatedPages.push({ componentName, route: page.route || '/' });

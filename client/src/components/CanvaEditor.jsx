@@ -643,8 +643,8 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                           key={page.id}
                           onClick={() => handleSwitchPage(page.id)}
                           className={`group p-3 rounded-xl border transition-all cursor-pointer relative ${activePageId === page.id
-                              ? 'bg-cyan-500/10 border-cyan-500/50'
-                              : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
+                            ? 'bg-cyan-500/10 border-cyan-500/50'
+                            : 'bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10'
                             }`}
                         >
                           <div className="flex items-center justify-between mb-2">
@@ -783,6 +783,8 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                         theme={currentTheme}
                         previewMode={previewMode}
                         isMobileView={isMobileView && !previewMode}
+                        onNavigate={handleSwitchPage}
+                        pages={pages}
                       />
                     ))}
                   </SortableContext>
@@ -799,6 +801,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
               <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#0F0F0F]">
                 <Inspector
                   section={selectedSection}
+                  pages={pages}
                   onUpdate={(newData) => updateElement(selectedSection.id, newData)}
                   onDuplicate={() => duplicateElement(selectedSection.id)}
                   onRemove={() => removeElement(selectedSection.id)}
@@ -945,7 +948,7 @@ function ElementCard({ onClick, label, icon, desc }) {
   );
 }
 
-function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView }) {
+function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView, onNavigate, pages }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: element.id, disabled: previewMode });
 
   const style = {
@@ -979,12 +982,14 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
         isSelected={isSelected && !previewMode}
         isMobileView={isMobileView}
         previewMode={previewMode}
+        onNavigate={onNavigate}
+        pages={pages}
       />
     </div>
   );
 }
 
-function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode }) {
+function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode, onNavigate, pages }) {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
@@ -1028,7 +1033,9 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
     theme,
     onUpdate,
     isMobileView,
-    previewMode
+    previewMode,
+    onNavigate,
+    pages
   };
 
   const customStyle = {
@@ -1193,7 +1200,7 @@ function InspectorSection({ title, icon: Icon, isOpen, onToggle, children }) {
   )
 }
 
-function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveDown }) {
+function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveDown, pages }) {
   const { type, data, id } = section;
   const [activeSection, setActiveSection] = useState('Content');
 
@@ -1224,7 +1231,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
             </ControlGroup>
             <ControlGroup label="Action Button">
               <Input label="Label" value={data.button} onChange={(v) => update('button', v)} />
-              <Input label="Link (URL)" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} placeholder="#" />
+              <LinkSettings label="Link" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} pages={pages} />
             </ControlGroup>
           </>
         )}
@@ -1243,11 +1250,11 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     newLinks[i] = { ...link, label: v };
                     update('links', newLinks);
                   }} />
-                  <Input label="URL" value={link.href} onChange={(v) => {
+                  <LinkSettings label="Destination" value={link.href} onChange={(v) => {
                     const newLinks = [...data.links];
                     newLinks[i] = { ...link, href: v };
                     update('links', newLinks);
-                  }} />
+                  }} pages={pages} />
                   <button
                     onClick={() => update('links', data.links.filter((_, idx) => idx !== i))}
                     className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
@@ -1301,11 +1308,11 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                   newBtns[i] = { ...btn, label: v };
                   update('buttons', newBtns);
                 }} />
-                <Input label="Link (URL)" value={btn.href} onChange={(v) => {
+                <LinkSettings label="Link" value={btn.href} onChange={(v) => {
                   const newBtns = [...data.buttons];
                   newBtns[i] = { ...btn, href: v };
                   update('buttons', newBtns);
-                }} />
+                }} pages={pages} />
                 <button
                   onClick={() => update('buttons', data.buttons.filter((_, idx) => idx !== i))}
                   className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
@@ -1338,11 +1345,11 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
                     newPlans[i] = { ...plan, buttonLabel: v };
                     update('plans', newPlans);
                   }} />
-                  <Input label="URL" value={plan.buttonHref} onChange={(v) => {
+                  <LinkSettings label="Link" value={plan.buttonHref} onChange={(v) => {
                     const newPlans = [...data.plans];
                     newPlans[i] = { ...plan, buttonHref: v };
                     update('plans', newPlans);
-                  }} />
+                  }} pages={pages} />
                 </ControlGroup>
                 <div className="flex items-center gap-2 mt-2">
                   <input type="checkbox" checked={plan.highlighted} onChange={(e) => {
@@ -1437,7 +1444,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           <>
             <ControlGroup label="Button Config">
               <Input label="Label" value={data.buttonLabel} onChange={(v) => update('buttonLabel', v)} />
-              <Input label="Link (URL)" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} />
+              <LinkSettings label="Link" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} pages={pages} />
             </ControlGroup>
             <div className="space-y-4">
               {data.titles.map((title, i) => (
@@ -1598,7 +1605,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
             <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
             <Textarea label="Supporting Text" value={data.supportingText} onChange={(v) => update('supportingText', v)} rows={3} />
             <Input label="Button Label" value={data.button} onChange={(v) => update('button', v)} />
-            <Input label="Button Link" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} />
+            <LinkSettings label="Link" value={data.buttonHref} onChange={(v) => update('buttonHref', v)} pages={pages} />
           </ControlGroup>
         )}
 
@@ -1760,7 +1767,8 @@ function Select({ label, value, onChange, options }) {
 }
 
 // Render Components
-function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+
+function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`flex ${isMobileView ? 'flex-col gap-4 text-center' : 'items-center justify-between'}`}>
       <EditableText
@@ -1771,7 +1779,7 @@ function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode }) {
       />
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'gap-10'}`}>
         {data.links?.map((link, idx) => (
-          <a key={idx} href={link.href || '#'} onClick={(e) => link.href === '#' && e.preventDefault()}>
+          <SmartLink key={idx} href={link.href} onNavigate={onNavigate} pages={pages}>
             <EditableText
               value={link.label || link}
               onChange={(v) => {
@@ -1783,17 +1791,18 @@ function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode }) {
                 }
                 onUpdate({ ...data, links: newLinks });
               }}
-              className={`text-sm font-bold uppercase tracking-wider hover:opacity-100 cursor-pointer opacity-70 transition-opacity ${theme.text}`}
+              className={`text-sm font-bold uppercase tracking-widest hover:opacity-100 opacity-60 transition-opacity ${theme.text}`}
               previewMode={previewMode}
             />
-          </a>
+          </SmartLink>
         ))}
       </div>
     </div>
   );
 }
 
-function HeroSection({ data, theme, onUpdate, previewMode }) {
+
+function HeroSection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
   const alignClass = data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left';
   const marginClass = data.align === 'center' ? 'mx-auto' : data.align === 'right' ? 'ml-auto' : 'mr-auto';
 
@@ -1809,15 +1818,16 @@ function HeroSection({ data, theme, onUpdate, previewMode }) {
       <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text}`}>
         <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" previewMode={previewMode} />
       </div>
-      <a
-        href={data.buttonHref || '#'}
+      <SmartLink
+        href={data.buttonHref}
+        onNavigate={onNavigate}
+        pages={pages}
         className="inline-block"
-        onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
       >
         <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
           <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} previewMode={previewMode} />
         </button>
-      </a>
+      </SmartLink>
     </div>
   );
 }
@@ -1849,7 +1859,8 @@ function TextSection({ data, theme, onUpdate, previewMode }) {
 }
 
 
-function CardsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+
+function CardsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`grid gap-8 ${isMobileView ? 'grid-cols-1' : (data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4')}`}>
       {Array(data.count).fill(0).map((_, i) => (
@@ -1872,15 +1883,16 @@ function CardsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
             }} type="textarea" previewMode={previewMode} />
           </div>
           {data.buttonLabel && (
-            <a
-              href={data.buttonHref || '#'}
+            <SmartLink
+              href={data.buttonHref}
+              onNavigate={onNavigate}
+              pages={pages}
               className="mt-auto"
-              onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
             >
               <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
                 {data.buttonLabel}
               </button>
-            </a>
+            </SmartLink>
           )}
         </div>
       ))}
@@ -1921,7 +1933,8 @@ function TestimonialsSection({ data, theme, onUpdate, previewMode }) {
   );
 }
 
-function PricingSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+
+function PricingSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
       {data.plans.map((plan, i) => (
@@ -1952,10 +1965,11 @@ function PricingSection({ data, theme, onUpdate, isMobileView, previewMode }) {
               </li>
             ))}
           </ul>
-          <a
-            href={plan.buttonHref || '#'}
+          <SmartLink
+            href={plan.buttonHref}
+            onNavigate={onNavigate}
+            pages={pages}
             className="w-full"
-            onClick={(e) => (!plan.buttonHref || plan.buttonHref === '#') && e.preventDefault()}
           >
             <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
               <EditableText value={plan.buttonLabel || 'Get Started'} onChange={(v) => {
@@ -1964,7 +1978,7 @@ function PricingSection({ data, theme, onUpdate, isMobileView, previewMode }) {
                 onUpdate({ ...data, plans: newPlans });
               }} previewMode={previewMode} />
             </button>
-          </a>
+          </SmartLink>
         </div>
       ))}
     </div>
@@ -2032,14 +2046,16 @@ function VideoSection({ data, theme, onUpdate, previewMode }) {
   );
 }
 
-function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+
+function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`flex gap-6 ${isMobileView ? 'flex-col items-center' : (data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start')}`}>
       {data.buttons.map((btn, i) => (
-        <a
+        <SmartLink
           key={i}
-          href={btn.href || '#'}
-          onClick={(e) => (!btn.href || btn.href === '#') && e.preventDefault()}
+          href={btn.href}
+          onNavigate={onNavigate}
+          pages={pages}
         >
           <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
             <EditableText value={btn.label} onChange={(v) => {
@@ -2048,7 +2064,7 @@ function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode }) {
               onUpdate({ ...data, buttons: newBtns });
             }} previewMode={previewMode} />
           </button>
-        </a>
+        </SmartLink>
       ))}
     </div>
   );
@@ -2248,7 +2264,8 @@ function StatsSection({ data, theme, onUpdate, previewMode }) {
   );
 }
 
-function CTASection({ data, theme, onUpdate, previewMode }) {
+
+function CTASection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
   const updateField = (key, value) => {
     onUpdate({ ...data, [key]: value });
   };
@@ -2272,9 +2289,10 @@ function CTASection({ data, theme, onUpdate, previewMode }) {
           previewMode={previewMode}
         />
 
-        <a
-          href={data.buttonHref || '#'}
-          onClick={(e) => (!data.buttonHref || data.buttonHref === '#') && e.preventDefault()}
+        <SmartLink
+          href={data.buttonHref}
+          onNavigate={onNavigate}
+          pages={pages}
         >
           <button
             className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
@@ -2287,7 +2305,7 @@ function CTASection({ data, theme, onUpdate, previewMode }) {
               previewMode={previewMode}
             />
           </button>
-        </a>
+        </SmartLink>
       </div>
     </div>
   );
@@ -2329,4 +2347,125 @@ function ImageSection({ data, theme, onUpdate, previewMode }) {
     </div>
   );
 }
+
+function LinkSettings({ label, value, onChange, pages }) {
+  // value can be string (old URL) or object { type: 'none'|'internal'|'external', pageId?, url? }
+
+  // Normalize value
+  const linkConfig = typeof value === 'object' && value !== null ? value : {
+    type: value && value !== '#' ? 'external' : 'none',
+    url: value || '',
+    pageId: ''
+  };
+
+  const handleTypeChange = (newType) => {
+    onChange({
+      type: newType,
+      url: linkConfig.url,
+      pageId: linkConfig.pageId || (pages[0]?.id || '')
+    });
+  };
+
+  const handleUrlChange = (newUrl) => {
+    onChange({ ...linkConfig, url: newUrl });
+  };
+
+  const handlePageChange = (newPageId) => {
+    onChange({ ...linkConfig, pageId: newPageId });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="space-y-1.5 group">
+        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">
+          {label || 'Link'}
+        </label>
+        <div className="relative">
+          <select
+            value={linkConfig.type}
+            onChange={(e) => handleTypeChange(e.target.value)}
+            className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 cursor-pointer appearance-none"
+          >
+            <option value="none">No Link</option>
+            <option value="internal">Internal Page</option>
+            <option value="external">External URL</option>
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none" />
+        </div>
+      </div>
+
+      {linkConfig.type === 'internal' && (
+        <div className="relative">
+          <select
+            value={linkConfig.pageId}
+            onChange={(e) => handlePageChange(e.target.value)}
+            className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 cursor-pointer appearance-none"
+          >
+            {pages.map(page => (
+              <option key={page.id} value={page.id}>{page.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none" />
+        </div>
+      )}
+
+      {linkConfig.type === 'external' && (
+        <input
+          type="text"
+          value={linkConfig.url}
+          onChange={(e) => handleUrlChange(e.target.value)}
+          placeholder="https://example.com"
+          className="w-full bg-black/20 hover:bg-black/40 border border-white/5 focus:border-indigo-500/50 rounded-xl px-3 py-2.5 text-[13px] focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-200 text-zinc-100 placeholder:text-zinc-700 font-medium"
+        />
+      )}
+    </div>
+  );
+}
+
+function SmartLink({ href, children, className, onNavigate, pages }) {
+  const handleClick = (e) => {
+    // If it's an internal link object
+    if (typeof href === 'object' && href?.type === 'internal') {
+      e.preventDefault();
+      if (onNavigate && href.pageId) {
+        onNavigate(href.pageId);
+      }
+      return;
+    }
+
+    // If it's a legacy string but starts with / (though in editor we usually use full URLs or hash)
+    // For now, assume strings are external or hash, unless we want to parse them.
+    // Let's stick to the object structure for internal links.
+
+    if (!href || href === '#') {
+      e.preventDefault();
+    }
+  };
+
+  let destination = '#';
+  if (typeof href === 'string') {
+    destination = href;
+  } else if (href?.type === 'external') {
+    destination = href.url;
+  } else if (href?.type === 'internal') {
+    // In editor, we don't really navigate via URL hash, so '#' is fine as we handle onClick.
+    // But for visual completeness or hover, we could look up the page name?
+    // Let's just use '#' or a fake path for visual inspection if needed.
+    const targetPage = pages?.find(p => p.id === href.pageId);
+    destination = targetPage ? targetPage.route : '#';
+  }
+
+  return (
+    <a
+      href={destination}
+      onClick={handleClick}
+      className={className}
+      target={href?.type === 'external' ? '_blank' : undefined}
+      rel={href?.type === 'external' ? 'noopener noreferrer' : undefined}
+    >
+      {children}
+    </a>
+  );
+}
+
 export default CanvaEditor;
