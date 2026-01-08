@@ -109,7 +109,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     setPages(prev => prev.map(p =>
       p.id === activePageId ? { ...p, layout: state.layout } : p
     ));
-  }, [state.layout]); // Only sync when layout changes, not when page ID changes
+  }, [state.layout, activePageId]); // synced with activePageId
   const [activeTab, setActiveTab] = useState('components');
   const [activeSection, setActiveSection] = useState('Content');
   const [searchQuery, setSearchQuery] = useState('');
@@ -200,13 +200,17 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       p.id === activePageId ? { ...p, layout: state.layout } : p
     );
 
-    await onSave({
+    const payload = {
       name: state.name,
       theme: state.theme,
       layout: state.layout, // Keep for backward compat/current view
       pages: updatedPages,
       activePageId: activePageId
-    });
+    };
+
+    console.log('🔍 [DEBUG] Frontend Save Payload:', payload);
+
+    await onSave(payload);
     setTimeout(() => setIsSaving(false), 800);
   };
 

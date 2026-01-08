@@ -98,27 +98,53 @@ router.get('/:id', async (req, res, next) => {
 // Update project
 router.put('/:id', verifyFirebaseToken, async (req, res, next) => {
     try {
-        const project = await Project.findById(req.params.id);
+        const { id } = req.params;
+        const { name, theme, pages, activePageId } = req.body;
 
-        if (!project) {
+        console.log('🔍 [DEBUG] Project Update Payload:', JSON.stringify({
+            id,
+            pagesCount: pages?.length,
+            activePageId
+        }, null, 2));
+
+        const existingProject = await Project.findById(id);
+
+        if (!existingProject) {
             return res.status(404).json({ error: 'Project not found' });
         }
 
-        if (project.userId !== req.user.uid) {
+        if (existingProject.userId !== req.user.uid) {
             return res.status(403).json({ error: 'Access denied' });
         }
 
-        const { name, layout, theme, pages, activePageId } = req.body;
+        // 1. Defensive: Do not overwrite pages with empty array unless explicitly intended
+        // Use existing pages if 'pages' is missing or empty in body (unless it's a delete-all scenario, which is rare for update)
+        // For safety here, if pages is undefined/null, keep existing.
+        const finalPages = (pages && pages.length > 0) ? pages : existingProject.pages;
 
-        if (name) project.name = name;
-        if (layout) project.layout = layout;
-        if (theme) project.theme = theme;
-        if (pages) project.pages = pages;
-        if (activePageId) project.activePageId = activePageId;
+        // 2. Ensure activePageId is valid
+        const finalActivePageId = activePageId || existingProject.activePageId || (finalPages[0]?.id);
 
-        await project.save();
-        res.json(project);
+        // 3. Fallback Layout (for backward compatibility)
+        // Find layout from the active page in the final pages array
+        const activePage = finalPages.find(p => p.id === finalActivePageId);
+        const fallbackLayout = activePage?.layout || [];
+
+        const updatedProject = await Project.findByIdAndUpdate(
+            id,
+            {
+                name: name || existingProject.name,
+                theme: theme || existingProject.theme,
+                pages: finalPages,
+                activePageId: finalActivePageId,
+                layout: fallbackLayout
+            },
+            { new: true }
+        );
+
+        res.json(updatedProject);
     } catch (error) {
+        console.error('❌ [ERROR] Project Update Failed:', error);
         next(error);
     }
 });
