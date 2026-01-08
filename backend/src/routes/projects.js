@@ -101,11 +101,6 @@ router.put('/:id', verifyFirebaseToken, async (req, res, next) => {
         const { id } = req.params;
         const { name, theme, pages, activePageId } = req.body;
 
-        console.log('🔍 [DEBUG] Project Update Payload:', JSON.stringify({
-            id,
-            pagesCount: pages?.length,
-            activePageId
-        }, null, 2));
 
         const existingProject = await Project.findById(id);
 

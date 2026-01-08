@@ -208,8 +208,6 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       activePageId: activePageId
     };
 
-    console.log('🔍 [DEBUG] Frontend Save Payload:', payload);
-
     await onSave(payload);
     setTimeout(() => setIsSaving(false), 800);
   };
