@@ -33,7 +33,7 @@ const Dashboard = () => {
         setTemplates(response.data);
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      // Failed to fetch data
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ const Dashboard = () => {
       setShowCreateModal(false);
       navigate(`/editor/${response.data._id}`);
     } catch (error) {
-      console.error('Failed to create project:', error);
+      // Failed to create project
     }
   };
 
@@ -60,7 +60,7 @@ const Dashboard = () => {
       const response = await api.post(`/projects/${templateId}/clone`);
       navigate(`/editor/${response.data._id}`);
     } catch (error) {
-      console.error('Failed to clone template:', error);
+      // Failed to clone template
     }
   };
 
@@ -71,7 +71,7 @@ const Dashboard = () => {
       await api.delete(`/projects/${id}`);
       setProjects(prev => prev.filter(p => p._id !== id));
     } catch (error) {
-      console.error('Failed to delete project:', error);
+      // Failed to delete project
     }
   };
 

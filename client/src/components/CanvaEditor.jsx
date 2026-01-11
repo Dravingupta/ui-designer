@@ -238,7 +238,6 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Export failed:", err);
       alert("Export failed. Please try again.");
     } finally {
       setIsExporting(false);
@@ -258,25 +257,17 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   //   }));
   // };
   const addElement = (type) => {
-    console.log("🟢 ADD ELEMENT CLICKED:", type);
-
     const newElement = {
       id: `${type}-${Date.now()}`,
       type,
       data: getDefaultData(type),
     };
 
-    console.log("🟢 NEW ELEMENT OBJECT:", newElement);
-
-    setState(prev => {
-      const next = {
-        ...prev,
-        layout: [...prev.layout, newElement],
-        selectedSectionId: newElement.id,
-      };
-      console.log("🟢 NEW LAYOUT:", next.layout);
-      return next;
-    });
+    setState(prev => ({
+      ...prev,
+      layout: [...prev.layout, newElement],
+      selectedSectionId: newElement.id,
+    }));
   };
 
 
