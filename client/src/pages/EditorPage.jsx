@@ -19,7 +19,6 @@ const EditorPage = () => {
         const response = await api.get(`/projects/${id}`);
         setProject(response.data);
       } catch (error) {
-        console.error('Failed to fetch project:', error);
         navigate('/dashboard');
       } finally {
         setLoading(false);
@@ -42,7 +41,7 @@ const EditorPage = () => {
       });
       setProject(updatedProject);
     } catch (error) {
-      console.error('Failed to save project:', error);
+      // Failed to save
     }
   };
 

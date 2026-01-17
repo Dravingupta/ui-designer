@@ -13,13 +13,34 @@ const PrivateRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" />;
 };
 
+// PublicRoute: Redirect to dashboard if user is already logged in
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return user ? <Navigate to="/dashboard" /> : children;
+};
+
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          />
+          <Route 
+            path="/register" 
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } 
+          />
           <Route
             path="/dashboard"
             element={
@@ -36,7 +57,14 @@ function App() {
               </PrivateRoute>
             }
           />
-          <Route path="/" element={<LandingPage />} />
+          <Route 
+            path="/" 
+            element={
+              <PublicRoute>
+                <LandingPage />
+              </PublicRoute>
+            } 
+          />
         </Routes>
       </Router>
     </AuthProvider>

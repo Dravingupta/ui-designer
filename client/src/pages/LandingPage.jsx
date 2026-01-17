@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Layers, Layout, Zap, Edit3, Share2, Code } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const LandingPage = () => {
     const navigate = useNavigate();
+    const { user } = useAuth();
 
     return (
         <div className="min-h-screen bg-[#0A0A0A] text-gray-200 font-sans selection:bg-cyan-500/30">
@@ -22,16 +24,18 @@ const LandingPage = () => {
                         </div>
                         <span className="text-sm font-bold text-white tracking-widest uppercase font-mono">Automator.UI</span>
                     </div>
-                    <div className="flex items-center gap-8">
-                        <a href="#features" className="text-xs font-mono text-gray-400 hover:text-cyan-400 transition-colors uppercase tracking-wider">Features</a>
-                        <a href="#how-it-works" className="text-xs font-mono text-gray-400 hover:text-cyan-400 transition-colors uppercase tracking-wider">How it Works</a>
-                        <button
-                            onClick={() => navigate('/login')}
-                            className="text-xs font-bold font-mono bg-white text-black px-5 py-2 hover:bg-cyan-400 transition-colors border border-transparent hover:border-cyan-300"
-                        >
-                            SIGN_IN
-                        </button>
-                    </div>
+                    {!user && (
+                        <div className="flex items-center gap-8">
+                            <a href="#features" className="text-xs font-mono text-gray-400 hover:text-cyan-400 transition-colors uppercase tracking-wider">Features</a>
+                            <a href="#how-it-works" className="text-xs font-mono text-gray-400 hover:text-cyan-400 transition-colors uppercase tracking-wider">How it Works</a>
+                            <button
+                                onClick={() => navigate('/login')}
+                                className="text-xs font-bold font-mono bg-white text-black px-5 py-2 hover:bg-cyan-400 transition-colors border border-transparent hover:border-cyan-300"
+                            >
+                                SIGN_IN
+                            </button>
+                        </div>
+                    )}
                 </div>
             </nav>
 

@@ -1,4 +1,4 @@
-# Automator.UI - AI Website Builder
+# AI-UI-Website Builder
 
 <div align="center">
 
