@@ -64,6 +64,8 @@ const elementCategories = {
     { type: 'timeline', label: 'Timeline', icon: Clock, desc: 'Chronological steps' },
     { type: 'stats', label: 'Stats', icon: BarChart3, desc: 'Numerical statistics' },
     { type: 'testimonials', label: 'Testimonials', icon: MessageSquare, desc: 'Customer reviews' },
+    { type: 'menu', label: 'Horizontal Cards', icon: FileText, desc: 'List items with optional images' },
+    { type: 'cafemenu', label: 'Cafe Menu', icon: ImageIcon, desc: 'Visual menu with images' },
   ],
   Media: [
     { type: 'image', label: 'Image', icon: ImageIcon, desc: 'Photos and illustrations' },
@@ -336,6 +338,47 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       divider: { ...common, height: 'md', showLine: true, py: 'py-0' },
       footer: { ...common, text: '© 2025 UI Designer. All rights reserved.', py: 'py-12' },
       timeline: { ...common, items: [{ title: 'Step 1', description: 'Describe the first step.' }], py: 'py-16' },
+      menu: {
+        ...common,
+        heading: 'Horizontal Cards',
+        layout: 'simple', // 'simple' or 'image'
+        categories: [
+          {
+            name: 'Category 1',
+            items: [
+              { name: 'Item Name', description: 'Description text goes here', price: '$10', image: 'https://placehold.co/200x200/222/999?text=IMG' },
+              { name: 'Item Name', description: 'Description text goes here', price: '$20', image: 'https://placehold.co/200x200/222/999?text=IMG' }
+            ]
+          },
+          {
+            name: 'Category 2',
+            items: [
+              { name: 'Item Name', description: 'Description text goes here', price: '$30', image: 'https://placehold.co/200x200/222/999?text=IMG' },
+              { name: 'Item Name', description: 'Description text goes here', price: '$40', image: 'https://placehold.co/200x200/222/999?text=IMG' }
+            ]
+          }
+        ]
+      },
+      cafemenu: {
+        ...common,
+        heading: 'Cafe Specials',
+        categories: [
+          {
+            name: 'Coffee & Drinks',
+            items: [
+              { name: 'Cappuccino', description: 'Rich espresso with steamed milk foam', price: '$4.50', image: 'https://placehold.co/400x300/3e2723/ffffff?text=Coffee' },
+              { name: 'Matcha Latte', description: 'Premium grade matcha green tea', price: '$5.50', image: 'https://placehold.co/400x300/2e4d26/ffffff?text=Matcha' }
+            ]
+          },
+          {
+            name: 'Bakery',
+            items: [
+              { name: 'Croissant', description: 'Buttery, flaky, fresh baked daily', price: '$3.75', image: 'https://placehold.co/400x300/e65100/ffffff?text=Croissant' },
+              { name: 'Berry Tart', description: 'Fresh seasonal berries with cream', price: '$6.00', image: 'https://placehold.co/400x300/880e4f/ffffff?text=Tart' }
+            ]
+          }
+        ]
+      },
     };
     return defaults[type] || { ...common };
   };
@@ -763,7 +806,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               className={`
                    transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]
-                   ${previewMode ? 'w-full max-w-full rounded-none shadow-none h-full' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh]'}
+                   ${previewMode ? 'w-full max-w-10xl rounded-none shadow-none' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh]'}
                    ${isMobileView && !previewMode ? 'w-[375px] max-w-[375px] border-[8px] border-[#1a1a1a] rounded-[2.5rem] overflow-hidden ring-4 ring-black/20' : 'w-full max-w-6xl'}
                    ${currentTheme.bg}
                 `}
@@ -1025,6 +1068,8 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
     stats: StatsSection,
     cta: CTASection,
     featuresgrid: FeaturesGridSection,
+    menu: MenuSection,
+    cafemenu: CafeMenuSection,
   };
 
   // Mobile Override Logic
@@ -1103,6 +1148,15 @@ function ZoomBar({ zoom, onZoomIn, onZoomOut }) {
 
 // Inspector Components
 function InspectorHeader({ type, onDuplicate, onDelete, onMoveUp, onMoveDown }) {
+  // Map long element names to shorter display versions
+  const displayNames = {
+    'featuresgrid': 'F Grid',
+    'testimonials': 'Testimni',
+    'cta': 'CTA'
+  };
+
+  const displayName = displayNames[type] || type;
+
   return (
     <div className="sticky top-0 z-20 bg-[#0A0A0A]/90 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -1110,7 +1164,7 @@ function InspectorHeader({ type, onDuplicate, onDelete, onMoveUp, onMoveDown }) 
           <Layers className="w-4 h-4 text-cyan-400" />
         </div>
         <div>
-          <h3 className="text-xs font-bold text-gray-200 uppercase tracking-widest font-mono">{type}</h3>
+          <h3 className="text-xs font-bold text-gray-200 uppercase tracking-widest font-mono">{displayName}</h3>
         </div>
       </div>
 
@@ -1655,6 +1709,209 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
           </div>
         )}
 
+        {type === 'menu' && (
+          <div className="space-y-4">
+            <ControlGroup label="Configuration">
+              <Select
+                label="Layout"
+                value={data.layout || 'simple'}
+                onChange={(v) => update('layout', v)}
+                options={['simple', 'image']}
+              />
+            </ControlGroup>
+            <ControlGroup label="Menu Heading">
+              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+            </ControlGroup>
+            {data.categories.map((category, catIdx) => (
+              <div key={catIdx} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-3 relative group mt-2">
+                <Input
+                  label="Category Name"
+                  value={category.name}
+                  onChange={(v) => {
+                    const newCats = [...data.categories];
+                    newCats[catIdx] = { ...category, name: v };
+                    update('categories', newCats);
+                  }}
+                />
+                <div className="space-y-2">
+                  {category.items.map((item, itemIdx) => (
+                    <div key={itemIdx} className="p-2 bg-zinc-900/50 rounded border border-white/5 space-y-2 relative group/item">
+                      <Input
+                        label="Item Name"
+                        value={item.name}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, name: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <Input
+                        label="Description"
+                        value={item.description}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, description: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <Input
+                        label="Price"
+                        value={item.price}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, price: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      {data.layout === 'image' && (
+                        <Input
+                          label="Image URL"
+                          value={item.image}
+                          onChange={(v) => {
+                            const newCats = [...data.categories];
+                            newCats[catIdx].items[itemIdx] = { ...item, image: v };
+                            update('categories', newCats);
+                          }}
+                        />
+                      )}
+                      <button
+                        onClick={() => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items = newCats[catIdx].items.filter((_, idx) => idx !== itemIdx);
+                          update('categories', newCats);
+                        }}
+                        className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const newCats = [...data.categories];
+                      newCats[catIdx].items.push({ name: 'New Item', description: 'Description', price: '$0.00' });
+                      update('categories', newCats);
+                    }}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2"
+                  >
+                    + Add Item
+                  </button>
+                </div>
+                <button
+                  onClick={() => update('categories', data.categories.filter((_, idx) => idx !== catIdx))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => update('categories', [...data.categories, { name: 'New Category', items: [] }])}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2"
+            >
+              + Add Category
+            </button>
+          </div>
+        )}
+
+        {type === 'cafemenu' && (
+          <div className="space-y-4">
+            <ControlGroup label="Configuration">
+              <div className="text-xs text-zinc-500 italic mb-2">Cafe Style Layout Enabled</div>
+            </ControlGroup>
+            <ControlGroup label="Menu Heading">
+              <Input label="Heading" value={data.heading} onChange={(v) => update('heading', v)} />
+            </ControlGroup>
+            {data.categories.map((category, catIdx) => (
+              <div key={catIdx} className="p-3 bg-zinc-800/50 rounded-xl border border-white/5 space-y-3 relative group mt-2">
+                <Input
+                  label="Category Name"
+                  value={category.name}
+                  onChange={(v) => {
+                    const newCats = [...data.categories];
+                    newCats[catIdx] = { ...category, name: v };
+                    update('categories', newCats);
+                  }}
+                />
+                <div className="space-y-2">
+                  {category.items.map((item, itemIdx) => (
+                    <div key={itemIdx} className="p-2 bg-zinc-900/50 rounded border border-white/5 space-y-2 relative group/item">
+                      <Input
+                        label="Item Name"
+                        value={item.name}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, name: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <Input
+                        label="Description"
+                        value={item.description}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, description: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <Input
+                        label="Price"
+                        value={item.price}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, price: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <Input
+                        label="Image URL"
+                        value={item.image}
+                        onChange={(v) => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items[itemIdx] = { ...item, image: v };
+                          update('categories', newCats);
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const newCats = [...data.categories];
+                          newCats[catIdx].items = newCats[catIdx].items.filter((_, idx) => idx !== itemIdx);
+                          update('categories', newCats);
+                        }}
+                        className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover/item:opacity-100 transition-all"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      const newCats = [...data.categories];
+                      newCats[catIdx].items.push({ name: 'New Item', description: 'Description', price: '$0.00', image: 'https://placehold.co/200x200' });
+                      update('categories', newCats);
+                    }}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2"
+                  >
+                    + Add Item
+                  </button>
+                </div>
+                <button
+                  onClick={() => update('categories', data.categories.filter((_, idx) => idx !== catIdx))}
+                  className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => update('categories', [...data.categories, { name: 'New Category', items: [] }])}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-bold px-2"
+            >
+              + Add Category
+            </button>
+          </div>
+        )}
+
         {type === 'footer' && (
           <ControlGroup label="Footer Content">
             <Input label="Copyright Text" value={data.text} onChange={(v) => update('text', v)} />
@@ -2044,6 +2301,43 @@ function LogoGridSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   );
 }
 
+function CafeMenuSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+  return (
+    <div className="max-w-6xl mx-auto">
+      <h2 className={`text-6xl font-black mb-20 tracking-tight text-center ${theme.text} italic`}>
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
+      </h2>
+      <div className="space-y-16">
+        {data.categories.map((category, catIndex) => (
+          <div key={catIndex} className="space-y-8">
+            <h3 className={`text-3xl font-black text-center uppercase tracking-widest ${theme.text} border-b-2 border-dashed ${theme.border} pb-6 mx-auto max-w-xs`}>
+              {category.name}
+            </h3>
+            <div className={`grid ${isMobileView ? 'grid-cols-1 gap-8' : 'grid-cols-2 gap-x-12 gap-y-10'}`}>
+              {category.items.map((item, itemIndex) => (
+                <div key={itemIndex} className="group relative">
+                  <div className="flex gap-6 items-start">
+                    <div className="w-32 h-32 shrink-0 rounded-2xl overflow-hidden shadow-lg rotate-3 group-hover:rotate-0 transition-all duration-300">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex justify-between items-baseline border-b border-dashed border-gray-700/30 pb-2">
+                        <h4 className={`text-xl font-bold ${theme.text} font-serif`}>{item.name}</h4>
+                        <span className={`text-xl font-bold ${theme.accent.split(' ')[0].replace('bg-', 'text-')} whitespace-nowrap`}>{item.price}</span>
+                      </div>
+                      <p className={`text-sm ${theme.muted} leading-relaxed font-medium opacity-80`}>{item.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VideoSection({ data, theme, onUpdate, previewMode }) {
   return (
     <div className="max-w-5xl mx-auto">
@@ -2057,6 +2351,54 @@ function VideoSection({ data, theme, onUpdate, previewMode }) {
   );
 }
 
+function MenuSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+  const isImageLayout = data.layout === 'image';
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h2 className={`text-5xl font-black mb-16 tracking-tight text-center ${theme.text}`}>
+        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
+      </h2>
+      <div className="space-y-12">
+        {data.categories.map((category, catIndex) => (
+          <div key={catIndex} className="space-y-6">
+            <h3 className={`text-2xl font-bold ${theme.text} border-b ${theme.border} pb-3`}>
+              {category.name}
+            </h3>
+            <div className={`grid ${isImageLayout ? (isMobileView ? 'grid-cols-1 gap-6' : 'grid-cols-2 gap-6') : 'space-y-4'}`}>
+              {category.items.map((item, itemIndex) => (
+                <div key={itemIndex} className={`
+                  ${isImageLayout
+                    ? `p-0 overflow-hidden flex flex-col`
+                    : `flex justify-between items-start gap-4 p-4`
+                  } 
+                  rounded-lg ${theme.secondary} hover:opacity-80 transition-opacity
+                `}>
+
+                  {isImageLayout && item.image && (
+                    <div className="h-48 w-full overflow-hidden">
+                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  <div className={isImageLayout ? 'p-6 flex flex-col flex-1' : 'flex-1'}>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className={`text-lg font-bold ${theme.text}`}>{item.name}</h4>
+                      {!isImageLayout && <div className={`text-lg font-bold ${theme.text} whitespace-nowrap`}>{item.price}</div>}
+                    </div>
+                    <p className={`text-sm ${theme.muted} ${isImageLayout ? 'mb-4 flex-1' : ''}`}>{item.description}</p>
+                    {isImageLayout && <div className={`text-lg font-bold ${theme.text} whitespace-nowrap`}>{item.price}</div>}
+                  </div>
+
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
@@ -2068,7 +2410,7 @@ function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode, onNa
           onNavigate={onNavigate}
           pages={pages}
         >
-          <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${i === 0 ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
+          <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${theme.accent}`}>
             <EditableText value={btn.label} onChange={(v) => {
               const newBtns = [...data.buttons];
               newBtns[i].label = v;

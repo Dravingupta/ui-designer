@@ -1,4 +1,3 @@
-// src/routes/generate.js
 import express from 'express';
 import Project from '../models/Project.js';
 import { generateCode } from '../services/ai.js';
@@ -6,7 +5,6 @@ import { createZip } from '../services/zip.js';
 
 const router = express.Router();
 
-// Generate ZIP from project
 router.post('/:projectId', async (req, res, next) => {
     try {
         const { projectId } = req.params;
@@ -18,7 +16,6 @@ router.post('/:projectId', async (req, res, next) => {
             return res.status(404).json({ error: 'Project not found' });
         }
 
-        // Check if user owns project or if it's public
         let isOwner = false;
 
         if (token) {
@@ -27,23 +24,19 @@ router.post('/:projectId', async (req, res, next) => {
                 const decodedToken = await admin.auth().verifyIdToken(token);
                 isOwner = decodedToken.uid === project.userId;
             } catch (err) {
-                // Token invalid, continue as guest
             }
         }
 
         if (!isOwner && !project.isPublic) {
             return res.status(403).json({ error: 'Access denied' });
         }
-
-        // Prepare files object
         const files = {};
         const pages = project.pages && project.pages.length > 0
             ? project.pages
-            : [{ name: 'Home', route: '/', layout: project.layout, id: 'default' }]; // Backward compatibility
+            : [{ name: 'Home', route: '/', layout: project.layout, id: 'default' }];
 
         const generatedPages = [];
 
-        // Create Route Map for Internal Linking
         const pageRouteMap = pages.reduce((acc, page) => {
             acc[page.id] = page.route;
             return acc;
@@ -61,7 +54,6 @@ router.post('/:projectId', async (req, res, next) => {
             generatedPages.push({ componentName, route: page.route || '/' });
         }
 
-        // Generate App.jsx with Routing
         const appJsx = `
 import { Routes, Route } from 'react-router-dom';
 ${generatedPages.map(p => `import ${p.componentName} from './pages/${p.componentName}';`).join('\n')}
