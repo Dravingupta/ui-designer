@@ -22,6 +22,7 @@ const verifyGemini = async () => {
     } catch (error) {
         console.error('Gemini API verification FAILED:', error.message);
     }
+    
 };
 
 verifyGemini();
