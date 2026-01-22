@@ -2,6 +2,7 @@ import express from 'express';
 import Project from '../models/Project.js';
 import { generateCode } from '../services/ai.js';
 import { createZip } from '../services/zip.js';
+import { themes } from '../config/themes.js';
 
 const router = express.Router();
 
@@ -42,16 +43,35 @@ router.post('/:projectId', async (req, res, next) => {
             return acc;
         }, {});
 
+        // Resolve theme object
+        const themeName = project.theme || 'light';
+        console.log('Resolving theme for project:', projectId, 'Theme Name:', themeName);
+
+        const themeObj = themes[themeName] || themes.light;
+        console.log('Resolved Theme Object:', themeObj ? 'Found' : 'Not Found');
+
+        if (!themeObj) {
+            console.error('CRITICAL: Theme object format invalid or missing');
+        }
+
         // Generate code for each page
         for (const page of pages) {
             const pageName = page.name || 'Page';
             const componentName = pageName.replace(/\s+/g, '');
 
-            // Pass page layout and route map to AI
-            const pageCode = await generateCode({ ...page, name: pageName }, project.theme, pageRouteMap);
+            console.log(`Generating code for page: ${pageName} (${componentName})`);
 
-            files[`src/pages/${componentName}.jsx`] = pageCode;
-            generatedPages.push({ componentName, route: page.route || '/' });
+            try {
+                // Pass resolved theme object to AI
+                const pageCode = await generateCode({ ...page, name: pageName }, themeObj, pageRouteMap);
+                console.log(`Successfully generated code for ${pageName}`);
+
+                files[`src/pages/${componentName}.jsx`] = pageCode;
+                generatedPages.push({ componentName, route: page.route || '/' });
+            } catch (err) {
+                console.error(`Error generating code for page ${pageName}:`, err);
+                throw err; // Re-throw to be caught by outer handler
+            }
         }
 
         const appJsx = `
