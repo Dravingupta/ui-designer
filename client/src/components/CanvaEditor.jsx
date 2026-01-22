@@ -850,7 +850,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
         {/* Right Sidebar - Inspector */}
         {!previewMode && (
-          <aside className="w-64 bg-[#0F0F0F] border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40">
+          <aside className="w-64 bg-[#0F0F0F] border-l border-white/5 hidden lg:flex flex-col sticky top-0 h-screen z-40">
             {selectedSection ? (
               <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#0F0F0F]">
                 <Inspector
