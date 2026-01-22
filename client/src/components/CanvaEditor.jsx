@@ -561,7 +561,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         {/* Left Sidebar - Nav Rail + Drawer */}
         {!previewMode && (
           // Web: Fixed w-20 (Overlay). Mobile: Expands (Push)
-          <div className={`relative flex h-full shrink-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${activeTab ? 'w-[25rem]' : 'w-20'}`}>
+          <div className={`relative flex h-full shrink-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${activeTab ? 'w-[340px]' : 'w-20'}`}>
             {/* 1. Navigation Rail (Fixed Icons) */}
             <div className="w-20 bg-[#050505] border-r border-white/5 flex flex-col items-center py-6 gap-6 z-50 relative">
               <NavRailButton
@@ -590,10 +590,10 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                 bg-[#0F0F0F] border-r border-white/5 flex flex-col 
                 transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] 
                 overflow-hidden shadow-[4px_0_24px_-2px_rgba(0,0,0,0.5)] z-30
-                ${activeTab ? 'w-64 opacity-100' : 'w-0 opacity-0 pointer-events-none'}
+                ${activeTab ? 'w-[260px] opacity-100' : 'w-0 opacity-0 pointer-events-none'}
              `}>
               {/* Content Container - Fixed Width to prevent internal squashing */}
-              <div className="flex flex-col h-full w-64 min-w-[16rem] bg-[#0F0F0F]">
+              <div className="flex flex-col h-full w-[260px] min-w-[260px] bg-[#0F0F0F]">
                 {activeTab === 'components' && (
                   <>
                     {/* Search Header */}
@@ -801,7 +801,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
           {/* Zoom Bar */}
           {!previewMode && <ZoomBar zoom={zoom} onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />}
 
-          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex items-start justify-center">
+          <div className="flex-1 w-full overflow-auto p-8 lg:p-8 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex items-start justify-center">
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               className={`
