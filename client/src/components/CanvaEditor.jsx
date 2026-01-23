@@ -46,6 +46,21 @@ const themes = {
   crimson: { type: 'dark', bg: 'bg-[#1a0505]', text: 'text-red-100', border: 'border-red-900/30', accent: 'bg-red-600 text-white hover:bg-red-700', secondary: 'bg-[#2b0a0a]', muted: 'text-red-400' },
   dracula: { type: 'dark', bg: 'bg-[#282a36]', text: 'text-[#f8f8f2]', border: 'border-[#6272a4]', accent: 'bg-[#ff79c6] text-[#282a36] hover:bg-[#bd93f9]', secondary: 'bg-[#44475a]', muted: 'text-[#6272a4]' },
   neon: { type: 'dark', bg: 'bg-black', text: 'text-white', border: 'border-fuchsia-500', accent: 'bg-fuchsia-600 text-white hover:bg-fuchsia-500 shadow-[0_0_15px_rgba(192,38,211,0.5)]', secondary: 'bg-neutral-900', muted: 'text-fuchsia-300' },
+
+  // Gradient Themes
+  sunset_vibes: { type: 'gradient', bg: 'bg-gradient-to-br from-orange-500 to-pink-500', text: 'text-white', border: 'border-white/20', accent: 'bg-white text-orange-600 hover:bg-orange-50', secondary: 'bg-white/10', muted: 'text-white/80' },
+  oceanic: { type: 'gradient', bg: 'bg-gradient-to-br from-cyan-500 to-blue-600', text: 'text-white', border: 'border-white/20', accent: 'bg-white text-blue-600 hover:bg-blue-50', secondary: 'bg-white/10', muted: 'text-white/80' },
+  northern_lights: { type: 'gradient', bg: 'bg-gradient-to-br from-teal-400 to-indigo-600', text: 'text-white', border: 'border-white/20', accent: 'bg-white text-teal-600 hover:bg-teal-50', secondary: 'bg-white/10', muted: 'text-white/80' },
+  cotton_candy: { type: 'gradient', bg: 'bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400', text: 'text-slate-900', border: 'border-white/40', accent: 'bg-white text-purple-600 hover:bg-purple-50', secondary: 'bg-white/30', muted: 'text-slate-700' },
+  midnight_gradient: { type: 'gradient', bg: 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900', text: 'text-white', border: 'border-white/10', accent: 'bg-indigo-500 text-white hover:bg-indigo-400', secondary: 'bg-white/5', muted: 'text-slate-400' },
+  golden_hour: { type: 'gradient', bg: 'bg-gradient-to-br from-amber-200 to-yellow-400', text: 'text-amber-950', border: 'border-amber-900/10', accent: 'bg-amber-900 text-amber-100 hover:bg-amber-800', secondary: 'bg-white/30', muted: 'text-amber-800' },
+  electric_violet: { type: 'gradient', bg: 'bg-gradient-to-br from-violet-600 to-indigo-600', text: 'text-white', border: 'border-white/20', accent: 'bg-white text-violet-600 hover:bg-violet-50', secondary: 'bg-white/10', muted: 'text-indigo-200' },
+  clean_gray: { type: 'gradient', bg: 'bg-gradient-to-br from-gray-100 to-gray-300', text: 'text-gray-900', border: 'border-gray-300', accent: 'bg-gray-900 text-white hover:bg-black', secondary: 'bg-white/50', muted: 'text-gray-600' },
+  rich_metal: { type: 'gradient', bg: 'bg-gradient-to-br from-slate-300 via-gray-300 to-zinc-300', text: 'text-slate-900', border: 'border-slate-400', accent: 'bg-slate-800 text-white hover:bg-slate-900', secondary: 'bg-white/40', muted: 'text-slate-600' },
+  lush_green: { type: 'gradient', bg: 'bg-gradient-to-br from-emerald-400 to-cyan-400', text: 'text-emerald-950', border: 'border-emerald-600/20', accent: 'bg-emerald-900 text-emerald-100 hover:bg-emerald-800', secondary: 'bg-white/20', muted: 'text-emerald-800' },
+  peach_fuzz: { type: 'gradient', bg: 'bg-gradient-to-br from-orange-200 via-stone-100 to-orange-100', text: 'text-orange-950', border: 'border-orange-200', accent: 'bg-orange-500 text-white hover:bg-orange-600', secondary: 'bg-white/50', muted: 'text-orange-700' },
+  royal_blue: { type: 'gradient', bg: 'bg-gradient-to-br from-blue-700 to-violet-800', text: 'text-white', border: 'border-white/20', accent: 'bg-white text-blue-800 hover:bg-blue-50', secondary: 'bg-white/10', muted: 'text-blue-200' },
+  galaxy: { type: 'gradient', bg: 'bg-gradient-to-br from-indigo-950 via-purple-900 to-violet-950', text: 'text-purple-100', border: 'border-purple-500/30', accent: 'bg-purple-400 text-purple-950 hover:bg-purple-300', secondary: 'bg-black/30', muted: 'text-purple-300' },
 };
 
 const elementCategories = {
@@ -784,6 +799,26 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                           ))}
                         </div>
                       </div>
+
+                      {/* Gradient Themes */}
+                      <div>
+                        <h3 className="text-[10px] uppercase font-bold text-gray-500 mb-3 tracking-wider">Gradient Modes</h3>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.keys(themes).filter(k => themes[k].type === 'gradient').map(name => (
+                            <button
+                              key={name}
+                              onClick={() => setTheme(name)}
+                              className={`p-3 rounded transition-all capitalize text-xs font-bold text-left relative overflow-hidden group border ${state.theme === name ? 'border-cyan-500 ring-1 ring-cyan-500/50 bg-cyan-500/10' : 'border-white/5 bg-white/5 hover:border-white/10 hover:bg-white/10'}`}
+                            >
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className={`w-3 h-3 rounded-full ${themes[name].accent.split(' ')[0]}`}></div>
+                                <div className={`w-3 h-3 rounded-full ${themes[name].bg} border border-white/20`}></div>
+                              </div>
+                              <span className="text-gray-300 group-hover:text-white transition-colors">{name.replace('_', ' ')}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </>
                 )}
@@ -876,6 +911,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
       </div>
 
       {/* Footer Info */}
+
       {!previewMode && (
         <footer className="bg-zinc-950 border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] font-bold text-zinc-600 tracking-widest uppercase">
           <div className="flex items-center gap-6">
