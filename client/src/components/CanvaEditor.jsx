@@ -2083,7 +2083,7 @@ function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode, onNav
       />
       <div className={`flex ${isMobileView ? 'flex-col gap-3' : 'gap-10'}`}>
         {data.links?.map((link, idx) => (
-          <SmartLink key={idx} href={link.href} onNavigate={onNavigate} pages={pages}>
+          <SmartLink key={idx} href={link.href} onNavigate={onNavigate} pages={pages} previewMode={previewMode}>
             <EditableText
               value={link.label || link}
               onChange={(v) => {
@@ -2126,6 +2126,7 @@ function HeroSection({ data, theme, onUpdate, previewMode, onNavigate, pages }) 
         href={data.buttonHref}
         onNavigate={onNavigate}
         pages={pages}
+        previewMode={previewMode}
         className="inline-block"
       >
         <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
@@ -2191,6 +2192,7 @@ function CardsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavi
               href={data.buttonHref}
               onNavigate={onNavigate}
               pages={pages}
+              previewMode={previewMode}
               className="mt-auto"
             >
               <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
@@ -2273,6 +2275,7 @@ function PricingSection({ data, theme, onUpdate, isMobileView, previewMode, onNa
             href={plan.buttonHref}
             onNavigate={onNavigate}
             pages={pages}
+            previewMode={previewMode}
             className="w-full"
           >
             <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
@@ -2445,6 +2448,7 @@ function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode, onNa
           href={btn.href}
           onNavigate={onNavigate}
           pages={pages}
+          previewMode={previewMode}
         >
           <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${theme.accent}`}>
             <EditableText value={btn.label} onChange={(v) => {
@@ -2682,6 +2686,7 @@ function CTASection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
           href={data.buttonHref}
           onNavigate={onNavigate}
           pages={pages}
+          previewMode={previewMode}
         >
           <button
             className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
@@ -2811,8 +2816,12 @@ function LinkSettings({ label, value, onChange, pages }) {
   );
 }
 
-function SmartLink({ href, children, className, onNavigate, pages }) {
+function SmartLink({ href, children, className, onNavigate, pages, previewMode }) {
   const handleClick = (e) => {
+    if (!previewMode) {
+      e.preventDefault();
+      return;
+    }
     // If it's an internal link object
     if (typeof href === 'object' && href?.type === 'internal') {
       e.preventDefault();
@@ -2842,6 +2851,14 @@ function SmartLink({ href, children, className, onNavigate, pages }) {
     // Let's just use '#' or a fake path for visual inspection if needed.
     const targetPage = pages?.find(p => p.id === href.pageId);
     destination = targetPage ? targetPage.route : '#';
+  }
+
+  if (!previewMode) {
+    return (
+      <div className={className} onClick={(e) => e.stopPropagation()}>
+        {children}
+      </div>
+    );
   }
 
   return (
