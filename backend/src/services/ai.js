@@ -155,3 +155,61 @@ export default function ${componentName}() {
 `;
   }
 };
+
+export const generateText = async ({ fieldType, sectionType, currentValue, contextText }) => {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+
+    let lengthInstruction = '';
+    switch (fieldType) {
+      case 'heading':
+        lengthInstruction = 'Keep it short, punchy, and attention-grabbing. Max 8-10 words.';
+        break;
+      case 'paragraph':
+        lengthInstruction = 'Write 2-4 concise, professional sentences.';
+        break;
+      case 'button':
+        lengthInstruction = '1-3 words, action-oriented (e.g., "Get Started", "Learn More").';
+        break;
+      case 'caption':
+        lengthInstruction = 'One very short sentence or phrase.';
+        break;
+      default:
+        lengthInstruction = 'Keep it concise and appropriate for a modern website.';
+    }
+
+    const prompt = `
+      You are an AI UX copywriter for a professional website builder.
+      Your task is to generate text for a specific UI element.
+
+      Context:
+      - Section Type: ${sectionType}
+      - Field Type: ${fieldType}
+      - Current Text: "${currentValue || ''}"
+      - Surrounding Context: ${JSON.stringify(contextText)}
+
+      Rules:
+      1. ${lengthInstruction}
+      2. Tone: Professional, engaging, and suitable for a modern business website.
+      3. Use the "Surrounding Context" to ensure relevance and consistency.
+      4. Do NOT use emojis, markdown, formatting, or quotes.
+      5. Return ONLY the plain text.
+    `;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    let text = response.text().trim();
+
+    // Cleanup quotes if the model adds them
+    if (text.startsWith('"') && text.endsWith('"')) {
+      text = text.slice(1, -1);
+    }
+
+    return text;
+  } catch (error) {
+    console.error('Gemini Text Generation Error:', error);
+    // Silent fallback to avoid breaking UI flow
+    return currentValue || 'Content';
+  }
+};

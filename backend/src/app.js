@@ -4,6 +4,7 @@ import cors from 'cors';
 import projectRoutes from './routes/projects.js';
 import templateRoutes from './routes/templates.js';
 import generateRoutes from './routes/generate.js';
+import aiRoutes from './routes/ai.js';
 import { errorHandler } from './utils/errorHandler.js';
 import "./config/firebase.js";
 
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 app.use('/projects', projectRoutes);
 app.use('/templates', templateRoutes);
 app.use('/generate', generateRoutes);
+app.use('/ai', aiRoutes);
 
 // Temporary test route for Gemini
 import { generateCode } from './services/ai.js';

@@ -15,7 +15,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor, FileText } from 'lucide-react';
+import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor, FileText, Sparkles, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 
@@ -869,6 +869,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                         element={element}
                         isSelected={state.selectedSectionId === element.id}
                         onSelect={() => selectSection(element.id)}
+                        onUpdate={(newData) => updateElement(element.id, newData)}
                         theme={currentTheme}
                         previewMode={previewMode}
                         isMobileView={isMobileView && !previewMode}
@@ -929,11 +930,75 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 }
 
 // Helper Components
+const useAIGenerator = (value, onChange, type, ref) => {
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const generate = async (e) => {
+    e?.stopPropagation();
+    if (isGenerating) return;
+
+    setIsGenerating(true);
+    try {
+      const element = ref.current;
+      const section = element?.closest('[data-section-type]');
+      const sectionType = section?.getAttribute('data-section-type') || 'unknown';
+
+      const contextText = section
+        ? Array.from(section.querySelectorAll('h1, h2, h3, p, span, button, input, textarea'))
+          .map(el => el.innerText || el.value)
+          .filter(t => t && t.length > 0 && t !== value)
+          .slice(0, 10)
+        : [];
+
+      let fieldType = 'paragraph';
+      if (type !== 'textarea') {
+        if ((value && value.length < 60) || type === 'heading' || type === 'label') fieldType = 'heading';
+        if (element?.closest('button')) fieldType = 'button';
+      }
+
+      const payload = {
+        fieldType,
+        sectionType,
+        currentValue: value,
+        contextText
+      };
+
+      const response = await api.post('/ai/generate', payload);
+      if (response.data && response.data.text) {
+        onChange(response.data.text);
+      }
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return { isGenerating, generate };
+};
+
+// UI Component for the button
+const AIButton = ({ isGenerating, onClick, className }) => (
+  <button
+    onClick={onClick}
+    disabled={isGenerating}
+    contentEditable={false}
+    className={`absolute z-50 p-1.5 bg-cyan-600 text-white rounded-lg shadow-xl shadow-cyan-900/20 hover:bg-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all animate-in fade-in zoom-in duration-200 ${isGenerating ? 'cursor-wait' : 'cursor-pointer'} ${className || '-right-8 top-0'}`}
+    title="Generate with AI"
+  >
+    {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+  </button>
+);
+
 function EditableText({ value, onChange, className, type = 'input', placeholder = 'Type here...', previewMode }) {
   const ref = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const lastEmittedValue = useRef(value);
   const prevValue = useRef(value);
+
+  const { isGenerating, generate } = useAIGenerator(value, onChange, type, ref);
 
   // Sync external changes only when not focused
   useEffect(() => {
@@ -974,26 +1039,43 @@ function EditableText({ value, onChange, className, type = 'input', placeholder 
     document.execCommand('insertText', false, text);
   };
 
+
+
+
   return (
     <span
-      ref={ref}
-      contentEditable={!previewMode}
-      suppressContentEditableWarning
-      onFocus={() => setIsFocused(true)}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      onPaste={handlePaste}
-      onClick={(e) => e.stopPropagation()}
-      className={`
-        outline-none min-w-[1ch] inline-block align-top transition-all duration-200 decoration-clone cursor-text
-        ${isFocused ? 'bg-cyan-500/20 ring-1 ring-cyan-500 rounded px-1 -mx-1 relative z-10' : 'hover:bg-cyan-500/10 hover:ring-1 hover:ring-cyan-500/30 rounded px-0.5 -mx-0.5'}
-        ${!value ? 'min-w-[30px] opacity-50 before:content-[attr(data-placeholder)]' : ''}
-        ${className}
-      `}
-      data-placeholder={placeholder}
-      style={{ whiteSpace: type === 'textarea' ? 'pre-wrap' : 'normal' }}
+      className="relative inline-block align-top max-w-full group/edit"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      {value}
+      <span
+        ref={ref}
+        contentEditable={!previewMode}
+        suppressContentEditableWarning
+        onFocus={() => setIsFocused(true)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        onClick={(e) => e.stopPropagation()}
+        className={`
+          outline-none min-w-[1ch] inline-block align-top transition-all duration-200 decoration-clone cursor-text
+          ${isFocused ? 'bg-cyan-500/20 ring-1 ring-cyan-500 rounded px-1 -mx-1 relative z-10' : 'hover:bg-cyan-500/10 hover:ring-1 hover:ring-cyan-500/30 rounded px-0.5 -mx-0.5'}
+          ${!value ? 'min-w-[30px] opacity-50 before:content-[attr(data-placeholder)]' : ''}
+          ${className}
+        `}
+        data-placeholder={placeholder}
+        style={{ whiteSpace: type === 'textarea' ? 'pre-wrap' : 'normal' }}
+      >
+        {value}
+      </span>
+
+      {!previewMode && (isFocused || isHovered || isGenerating) && (
+        <AIButton
+          isGenerating={isGenerating}
+          onClick={generate}
+          className="absolute -right-6 -top-2"
+        />
+      )}
     </span>
   );
 }
@@ -1038,7 +1120,7 @@ function ElementCard({ onClick, label, icon, desc }) {
   );
 }
 
-function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView, onNavigate, pages }) {
+function SortableSection({ element, isSelected, onSelect, onUpdate, theme, previewMode, isMobileView, onNavigate, pages }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: element.id, disabled: previewMode });
 
   const style = {
@@ -1068,7 +1150,10 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
         type={element.type}
         data={element.data}
         theme={theme}
-        onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
+        onUpdate={(newData) => {
+          onSelect();
+          onUpdate(newData);
+        }}
         isSelected={isSelected && !previewMode}
         isMobileView={isMobileView}
         previewMode={previewMode}
@@ -1155,6 +1240,7 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
       style={customStyle}
       className={`relative overflow-hidden ${data.py} ${data.px}`}
+      data-section-type={type}
     >
       <div className={`mx-auto ${data.maxWidth}`}>
         <Component {...componentProps} />
@@ -1312,7 +1398,7 @@ function Inspector({ section, onUpdate, onDuplicate, onRemove, onMoveUp, onMoveD
   const toggle = (sec) => setActiveSection(activeSection === sec ? null : sec);
 
   return (
-    <div className="pb-32 min-h-screen bg-[#0F0F0F] overflow-x-hidden border-l border-white/5">
+    <div className="pb-32 min-h-screen bg-[#0F0F0F] overflow-x-hidden border-l border-white/5" data-section-type={type}>
       <InspectorHeader
         type={type}
         onDuplicate={onDuplicate}
@@ -2024,10 +2110,26 @@ function ControlGroup({ label, children }) {
 }
 
 function Input({ label, value, onChange, placeholder }) {
+  const ref = useRef(null);
+  const { isGenerating, generate } = useAIGenerator(value, onChange, 'input', ref);
+
   return (
     <div className="space-y-1.5 group">
-      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={generate}
+            disabled={isGenerating}
+            className="p-1 hover:bg-white/10 rounded text-cyan-500 hover:text-cyan-400 transition-colors"
+            title="Generate with AI"
+          >
+            {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
       <input
+        ref={ref}
         type="text"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
@@ -2039,10 +2141,26 @@ function Input({ label, value, onChange, placeholder }) {
 }
 
 function Textarea({ label, value, onChange, rows = 3 }) {
+  const ref = useRef(null);
+  const { isGenerating, generate } = useAIGenerator(value, onChange, 'textarea', ref);
+
   return (
     <div className="space-y-1.5 group">
-      <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
+      <div className="flex justify-between items-center">
+        <label className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest ml-1 group-focus-within:text-indigo-400 transition-colors duration-300">{label}</label>
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={generate}
+            disabled={isGenerating}
+            className="p-1 hover:bg-white/10 rounded text-cyan-500 hover:text-cyan-400 transition-colors"
+            title="Generate with AI"
+          >
+            {isGenerating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+          </button>
+        </div>
+      </div>
       <textarea
+        ref={ref}
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         rows={rows}
