@@ -27,7 +27,7 @@ const maskHugeStrings = (obj, map = new Map(), threshold = 1000) => {
 export const generateCode = async (layout, themeObj, pageRouteMap = {}) => {
   try {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = genAI.getGenerativeModel({ model: "models/gemini-3-flash-preview" });
 
     const pageName = layout.name || 'Page';
     const componentName = pageName.replace(/\s+/g, '');
@@ -142,7 +142,7 @@ export default function ${componentName}() {
         ${pageName}
       </h1>
       <p className="text-center text-gray-600">
-        Theme: ${theme}
+        Theme: ${JSON.stringify(themeObj)}
       </p>
       <div className="max-w-6xl mx-auto p-4">
         <p className="text-sm text-gray-500">
@@ -153,5 +153,41 @@ export default function ${componentName}() {
   );
 }
 `;
+  };
+};
+
+// 🔹 NEW FUNCTION FOR INLINE AI SUGGESTIONS (DO NOT TOUCH generateCode)
+
+export const generateSuggestion = async ({ prompt, target, context }) => {
+  try {
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "models/gemini-3-flash-preview" });
+
+    const fullPrompt = `
+You are an expert UI/UX copywriter.
+
+User is designing a website UI.
+
+Generate ONLY a short ${target} text.
+Do NOT explain anything.
+Do NOT use quotes.
+Do NOT add punctuation at the end.
+
+Make it modern, professional, and catchy.
+
+Current UI context:
+${JSON.stringify(context)}
+
+User idea:
+"${prompt}"
+`;
+
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    return response.text().trim();
+
+  } catch (error) {
+    console.error("Gemini Suggestion Error:", error);
+    throw new Error("Suggestion generation failed");
   }
 };

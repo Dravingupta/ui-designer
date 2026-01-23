@@ -3,8 +3,29 @@ import Project from '../models/Project.js';
 import { generateCode } from '../services/ai.js';
 import { createZip } from '../services/zip.js';
 import { themes } from '../config/themes.js';
+import { generateSuggestion } from "../services/ai.js";
+
 
 const router = express.Router();
+
+router.post("/suggest", async (req, res) => {
+    try {
+        console.log("✅ AI REQUEST:", req.body);
+        const { prompt, target, context } = req.body;
+
+        const suggestion = await generateSuggestion({
+            prompt,
+            target,
+            context
+        });
+
+        res.json({ suggestion });
+
+    } catch (error) {
+        console.error("Suggest route error:", error);
+        res.status(500).json({ error: "AI suggestion failed" });
+    }
+});
 
 router.post('/:projectId', async (req, res, next) => {
     try {
@@ -127,5 +148,6 @@ npm run dev
         next(error);
     }
 });
+
 
 export default router;

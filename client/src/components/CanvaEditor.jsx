@@ -18,6 +18,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronLeft, Save, Eye, EyeOff, Download, Settings, Trash2, GripVertical, Plus, Edit3, Layout, Layers, X, Check, DollarSign, Mail, MessageSquare, HelpCircle, Grid, BarChart3, Megaphone, ImageIcon, Search, ChevronDown, Video, MousePointer, Minus, Clock, Copy, AlignLeft, AlignCenter, AlignRight, Type, Image as ImageIcon2, ArrowUp, ArrowDown, ChevronsUpDown, Smartphone, Monitor, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
+import AiSuggestion from "../components/AiSuggestion";
+
 
 
 
@@ -105,6 +107,10 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
     theme: initialData?.theme || 'light',
     layout: activePage.layout || []
   });
+  const [rightTab, setRightTab] = useState("inspector");
+
+
+
 
   // Sync layout changes back to pages state
   useEffect(() => {
@@ -119,6 +125,76 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
   const [isMobileView, setIsMobileView] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const panelOpen = !previewMode && (rightTab === "inspector" || rightTab === "ai");
+  const [aiDraft, setAiDraft] = useState(null);
+  // { elementId, field, text }
+
+  const PANEL_WIDTH = 320; // 320px = same as w-80
+
+  // Confirm AI draft and apply to real element
+  const applyAiDraft = () => {
+    if (!aiDraft) return;
+
+    const { elementId, field, text } = aiDraft;
+    const element = state.layout.find(el => el.id === elementId);
+    if (!element) return;
+
+    let newData = { ...element.data };
+
+    // Handle array fields like "button-0" or "planName-1"
+    if (field.includes('-')) {
+      const [fieldName, indexStr] = field.split('-');
+      const index = parseInt(indexStr);
+
+      if (fieldName === 'button' && newData.buttons) {
+        const newButtons = [...newData.buttons];
+        newButtons[index] = { ...newButtons[index], label: text };
+        newData.buttons = newButtons;
+      } else if (fieldName === 'planName' && newData.plans) {
+        const newPlans = [...newData.plans];
+        newPlans[index] = { ...newPlans[index], name: text };
+        newData.plans = newPlans;
+      } else if (fieldName === 'planPrice' && newData.plans) {
+        const newPlans = [...newData.plans];
+        newPlans[index] = { ...newPlans[index], price: text };
+        newData.plans = newPlans;
+      } else if (fieldName === 'planButton' && newData.plans) {
+        const newPlans = [...newData.plans];
+        newPlans[index] = { ...newPlans[index], buttonLabel: text };
+        newData.plans = newPlans;
+      } else if (fieldName === 'title' && newData.titles) {
+        const newTitles = [...newData.titles];
+        newTitles[index] = text;
+        newData.titles = newTitles;
+      } else if (fieldName === 'description' && newData.descriptions) {
+        const newDescriptions = [...newData.descriptions];
+        newDescriptions[index] = text;
+        newData.descriptions = newDescriptions;
+      } else if (fieldName === 'featureTitle' && newData.items) {
+        const newItems = [...newData.items];
+        newItems[index] = { ...newItems[index], title: text };
+        newData.items = newItems;
+      } else if (fieldName === 'featureDescription' && newData.items) {
+        const newItems = [...newData.items];
+        newItems[index] = { ...newItems[index], description: text };
+        newData.items = newItems;
+      } else if (fieldName === 'question' && newData.items) {
+        const newItems = [...newData.items];
+        newItems[index] = { ...newItems[index], question: text };
+        newData.items = newItems;
+      } else if (fieldName === 'answer' && newData.items) {
+        const newItems = [...newData.items];
+        newItems[index] = { ...newItems[index], answer: text };
+        newData.items = newItems;
+      }
+    } else {
+      // Standard top-level fields
+      newData[field] = text;
+    }
+
+    updateElement(elementId, newData);
+    setAiDraft(null); // clear preview after applying
+  };
 
   // Zoom State
   const [zoom, setZoom] = useState(1);
@@ -557,7 +633,7 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
 
       </AnimatePresence>
 
-      <div className={`flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}>
+      <div className={`relative flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}>
         {/* Left Sidebar - Nav Rail + Drawer */}
         {!previewMode && (
           // Web: Fixed w-20 (Overlay). Mobile: Expands (Push)
@@ -795,16 +871,19 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
         {/* Center Canvas */}
         <main
           onClick={() => !isMobileView && activeTab && setActiveTab(null)}
-          className={`flex-1 overflow-hidden relative transition-all duration-300 flex flex-col items-center ${previewMode ? 'bg-white' : 'bg-[#050505] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]'}`}
+          className={`relative flex flex-1 overflow-hidden transition-all ${previewMode ? 'bg-white' : ''}`}
         >
 
           {/* Zoom Bar */}
           {!previewMode && <ZoomBar zoom={zoom} onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />}
 
-          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex items-start justify-center">
+
+          <div className="flex-1 w-full overflow-auto p-8 lg:p-12 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent flex items-start justify-center transition-all duration-300">
+
             <div
               style={{ transform: `scale(${zoom})`, transformOrigin: 'top center' }}
               className={`
+                   mx-auto
                    transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]
                    ${previewMode ? 'w-full max-w-10xl rounded-none shadow-none' : 'shadow-2xl shadow-black border border-white/5 min-h-[90vh]'}
                    ${isMobileView && !previewMode ? 'w-[375px] max-w-[375px] border-[8px] border-[#1a1a1a] rounded-[2.5rem] overflow-hidden ring-4 ring-black/20' : 'w-full max-w-6xl'}
@@ -839,6 +918,8 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
                         isMobileView={isMobileView && !previewMode}
                         onNavigate={handleSwitchPage}
                         pages={pages}
+                        aiDraft={aiDraft}
+                        updateElement={updateElement}
                       />
                     ))}
                   </SortableContext>
@@ -848,49 +929,110 @@ function CanvaEditor({ initialData, projectId, onSave, onBack }) {
           </div>
         </main>
 
-        {/* Right Sidebar - Inspector */}
+
+        {/* Right Sidebar - Inspector + AI Assistant */}
         {!previewMode && (
-          <aside className="w-64 bg-[#0F0F0F] border-l border-white/5 hidden xl:flex flex-col sticky top-0 h-screen z-40">
-            {selectedSection ? (
-              <div className="flex-1 overflow-y-auto scrollbar-hide relative bg-[#0F0F0F]">
-                <Inspector
-                  section={selectedSection}
-                  pages={pages}
-                  onUpdate={(newData) => updateElement(selectedSection.id, newData)}
-                  onDuplicate={() => duplicateElement(selectedSection.id)}
-                  onRemove={() => removeElement(selectedSection.id)}
-                  onMoveUp={() => moveElementUp(selectedSection.id)}
-                  onMoveDown={() => moveElementDown(selectedSection.id)}
-                />
+          <aside
+            className="bg-[#0F0F0F] border-l border-white/5 flex flex-col shadow-2xl transition-all duration-300 shrink-0 relative"
+            style={{
+              width: panelOpen ? 340 : 0,
+              overflow: "hidden"
+            }}
+          >
+            {/* Tabs Header */}
+            <div className="h-12 flex items-center border-b border-white/5 bg-[#0A0A0A] px-2 shrink-0">
+              <button
+                onClick={() => setRightTab("inspector")}
+                className={`flex-1 h-8 text-[11px] uppercase tracking-widest font-mono transition rounded ${rightTab === "inspector"
+                  ? "bg-white/10 text-white"
+                  : "text-gray-500 hover:text-white"
+                  }`}
+              >
+                Inspector
+              </button>
+
+              <button
+                onClick={() => setRightTab("ai")}
+                className={`flex-1 h-8 text-[11px] uppercase tracking-widest font-mono transition rounded ${rightTab === "ai"
+                  ? "bg-white/10 text-white"
+                  : "text-gray-500 hover:text-white"
+                  }`}
+              >
+                AI
+              </button>
+            </div>
+
+            {/* Sidebar Content Area */}
+            <div className="flex-1 relative overflow-hidden">
+              {/* INSPECTOR */}
+              <div className={`h-full overflow-y-auto scrollbar-hide ${rightTab === "inspector" ? "block" : "hidden"}`}>
+                {selectedSection ? (
+                  <Inspector
+                    section={selectedSection}
+                    pages={pages}
+                    onUpdate={(newData) => updateElement(selectedSection.id, newData)}
+                    onDuplicate={() => duplicateElement(selectedSection.id)}
+                    onRemove={() => removeElement(selectedSection.id)}
+                    onMoveUp={() => moveElementUp(selectedSection.id)}
+                    onMoveDown={() => moveElementDown(selectedSection.id)}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-600 flex-col gap-4 font-mono text-xs">
+                    <div className="w-16 h-16 rounded border border-white/5 bg-white/5 flex items-center justify-center animate-pulse">
+                      <MousePointer className="w-6 h-6 opacity-20" />
+                    </div>
+                    <p className="uppercase tracking-widest opacity-50">Select Component</p>
+                  </div>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-600 flex-col gap-4 font-mono text-xs">
-                <div className="w-16 h-16 rounded border border-white/5 bg-white/5 flex items-center justify-center animate-pulse">
-                  <MousePointer className="w-6 h-6 opacity-20" />
+
+              {/* AI ASSISTANT PANEL */}
+              <div
+                className={`absolute inset-0 transition-transform duration-300 bg-[#0F0F0F] z-10 ${rightTab === "ai" ? "translate-x-0" : "translate-x-full"
+                  }`}
+              >
+                <div className="h-full overflow-y-auto p-4 scrollbar-hide">
+                  <h3 className="text-white mb-2">AI Content Assistant</h3>
+                  <p className="text-xs text-gray-500 mb-4">
+                    Type your UI text and press <b>Tab</b> to accept suggestion
+                  </p>
+                  <AiSuggestion
+                    selectedSection={selectedSection}
+                    setAiDraft={setAiDraft}
+                    applyAiDraft={applyAiDraft}
+                    clearDraft={() => setAiDraft(null)}
+                  />
+
                 </div>
-                <p className="uppercase tracking-widest opacity-50">Select_Component</p>
               </div>
-            )}
+            </div>
           </aside>
         )}
-      </div>
+      </div >
+
+
 
       {/* Footer Info */}
-      {!previewMode && (
-        <footer className="bg-zinc-950 border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] font-bold text-zinc-600 tracking-widest uppercase">
-          <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2">
-              <div className="w-1 h-1 rounded-full bg-indigo-500"></div>
-              Engine v1.0
-            </span>
-            <span>{state.layout.length} Nodes</span>
-          </div>
-          <div>UI Workspace / {state.name}</div>
-        </footer>
-      )}
-    </div>
-  );
+      {
+        !previewMode && (
+          <footer className="bg-zinc-950 border-t border-white/5 px-6 py-2 flex items-center justify-between text-[10px] font-bold text-zinc-600 tracking-widest uppercase">
+            <div className="flex items-center gap-6">
+              <span className="flex items-center gap-2">
+                <div className="w-1 h-1 rounded-full bg-indigo-500"></div>
+                Engine v1.0
+              </span>
+              <span>{state.layout.length} Nodes</span>
+            </div>
+            <div>UI Workspace / {state.name}</div>
+          </footer>
+        )
+      }
+    </div >
+
+
+  )
 }
+
 
 // Helper Components
 function EditableText({ value, onChange, className, type = 'input', placeholder = 'Type here...', previewMode }) {
@@ -1002,7 +1144,7 @@ function ElementCard({ onClick, label, icon, desc }) {
   );
 }
 
-function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView, onNavigate, pages }) {
+function SortableSection({ element, isSelected, onSelect, theme, previewMode, isMobileView, onNavigate, pages, aiDraft, updateElement }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: element.id, disabled: previewMode });
 
   const style = {
@@ -1032,6 +1174,8 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
         type={element.type}
         data={element.data}
         theme={theme}
+        aiDraft={aiDraft}
+        elementId={element.id}
         onUpdate={(newData) => onSelect() || updateElement(element.id, newData)}
         isSelected={isSelected && !previewMode}
         isMobileView={isMobileView}
@@ -1043,7 +1187,7 @@ function SortableSection({ element, isSelected, onSelect, theme, previewMode, is
   );
 }
 
-function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView, previewMode, onNavigate, pages }) {
+function SectionRenderer({ type, data, theme, aiDraft, elementId, onUpdate, isSelected, isMobileView, previewMode, onNavigate, pages }) {
   const components = {
     navbar: NavbarSection,
     hero: HeroSection,
@@ -1087,6 +1231,8 @@ function SectionRenderer({ type, data, theme, onUpdate, isSelected, isMobileView
   const componentProps = {
     data: displayData,
     theme,
+    aiDraft,
+    elementId,
     onUpdate,
     isMobileView,
     previewMode,
@@ -2070,21 +2216,48 @@ function NavbarSection({ data, theme, onUpdate, isMobileView, previewMode, onNav
 }
 
 
-function HeroSection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
+function HeroSection({ data, theme, aiDraft, elementId, onUpdate, previewMode, onNavigate, pages }) {
   const alignClass = data.align === 'center' ? 'text-center' : data.align === 'right' ? 'text-right' : 'text-left';
   const marginClass = data.align === 'center' ? 'mx-auto' : data.align === 'right' ? 'ml-auto' : 'mr-auto';
+  const previewHeading =
+    aiDraft &&
+      aiDraft.elementId === elementId &&
+      aiDraft.field === "heading"
+      ? aiDraft.text
+      : data.heading;
+
+  const previewSubheading =
+    aiDraft &&
+      aiDraft.elementId === elementId &&
+      aiDraft.field === "subheading"
+      ? aiDraft.text
+      : data.subheading;
+
+  const previewButton =
+    aiDraft &&
+      aiDraft.elementId === elementId &&
+      aiDraft.field === "button"
+      ? aiDraft.text
+      : data.button;
 
   return (
     <div className={alignClass}>
       <motion.h1
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${marginClass} ${theme.text}`}
+        className={`text-7xl font-black tracking-tighter mb-8 max-w-5xl ${marginClass} ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "heading"
+          ? "opacity-60 italic"
+          : ""
+          }`}
+
       >
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
+        <EditableText value={previewHeading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
+
       </motion.h1>
-      <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text}`}>
-        <EditableText value={data.subheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" previewMode={previewMode} />
+      <div className={`text-2xl mb-12 max-w-3xl ${marginClass} leading-relaxed opacity-60 font-medium ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "subheading"
+        ? "opacity-60 italic"
+        : ""}`}>
+        <EditableText value={previewSubheading} onChange={(v) => onUpdate({ ...data, subheading: v })} type="textarea" previewMode={previewMode} />
       </div>
       <SmartLink
         href={data.buttonHref}
@@ -2092,22 +2265,28 @@ function HeroSection({ data, theme, onUpdate, previewMode, onNavigate, pages }) 
         pages={pages}
         className="inline-block"
       >
-        <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent}`}>
-          <EditableText value={data.button} onChange={(v) => onUpdate({ ...data, button: v })} previewMode={previewMode} />
+        <button className={`px-12 py-5 text-lg font-black tracking-widest uppercase transition-all transform hover:scale-105 rounded-2xl shadow-2xl ${theme.accent} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "button"
+          ? "opacity-60 italic"
+          : ""}`}>
+          <EditableText value={previewButton} onChange={(v) => onUpdate({ ...data, button: v })} previewMode={previewMode} />
         </button>
       </SmartLink>
     </div>
   );
 }
 
-function RichTextSection({ data, theme, onUpdate, previewMode }) {
+
+function RichTextSection({ data, theme, aiDraft, elementId, onUpdate, previewMode }) {
+  const previewHeading = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "heading" ? aiDraft.text : data.heading;
+  const previewBody = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "body" ? aiDraft.text : data.body;
+
   return (
     <div className={`${data.align === 'center' ? 'text-center' : ''}`}>
-      <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text}`}>
-        <EditableText value={data.heading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
+      <h2 className={`text-5xl font-black mb-12 tracking-tight ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "heading" ? "opacity-60 italic" : ""}`}>
+        <EditableText value={previewHeading} onChange={(v) => onUpdate({ ...data, heading: v })} previewMode={previewMode} />
       </h2>
-      <div className={`text-xl leading-loose opacity-70 ${theme.text} whitespace-pre-line font-medium`}>
-        <EditableText value={data.body} onChange={(v) => onUpdate({ ...data, body: v })} type="textarea" previewMode={previewMode} />
+      <div className={`text-xl leading-loose opacity-70 ${theme.text} whitespace-pre-line font-medium ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "body" ? "opacity-60 italic" : ""}`}>
+        <EditableText value={previewBody} onChange={(v) => onUpdate({ ...data, body: v })} type="textarea" previewMode={previewMode} />
       </div>
     </div>
   );
@@ -2128,42 +2307,49 @@ function TextSection({ data, theme, onUpdate, previewMode }) {
 
 
 
-function CardsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
+function CardsSection({ data, theme, aiDraft, elementId, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
+  const previewButtonLabel = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "buttonLabel" ? aiDraft.text : data.buttonLabel;
+
   return (
     <div className={`grid gap-8 ${isMobileView ? 'grid-cols-1' : (data.count <= 2 ? 'grid-cols-2' : data.count === 3 ? 'grid-cols-3' : 'grid-cols-4')}`}>
-      {Array(data.count).fill(0).map((_, i) => (
-        <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02] flex flex-col`}>
-          <div className="h-48 mb-6 overflow-hidden rounded-2xl">
-            <img src={data.imageUrls[i]} alt={data.titles[i]} className="w-full h-full object-cover" />
+      {Array(data.count).fill(0).map((_, i) => {
+        const previewTitle = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `title-${i}` ? aiDraft.text : data.titles[i];
+        const previewDesc = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `description-${i}` ? aiDraft.text : data.descriptions[i];
+
+        return (
+          <div key={i} className={`p-8 rounded-3xl border ${theme.border} ${theme.secondary} transition-all hover:scale-[1.02] flex flex-col`}>
+            <div className="h-48 mb-6 overflow-hidden rounded-2xl">
+              <img src={data.imageUrls[i]} alt={data.titles[i]} className="w-full h-full object-cover" />
+            </div>
+            <h3 className={`text-xl font-bold mb-4 ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `title-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewTitle} onChange={(v) => {
+                const newTitles = [...data.titles];
+                newTitles[i] = v;
+                onUpdate({ ...data, titles: newTitles });
+              }} previewMode={previewMode} />
+            </h3>
+            <div className={`text-sm opacity-60 leading-relaxed ${theme.text} mb-6 flex-grow ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `description-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewDesc} onChange={(v) => {
+                const newDesc = [...data.descriptions];
+                newDesc[i] = v;
+                onUpdate({ ...data, descriptions: newDesc });
+              }} type="textarea" previewMode={previewMode} />
+            </div>
+            {data.buttonLabel && (
+              <SmartLink
+                href={data.buttonHref}
+                onNavigate={onNavigate}
+                pages={pages}
+                className="mt-auto"
+              >
+                <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "buttonLabel" ? "opacity-60 italic" : ""}`}>
+                  <EditableText value={previewButtonLabel} onChange={(v) => onUpdate({ ...data, buttonLabel: v })} previewMode={previewMode} />
+                </button>
+              </SmartLink>
+            )}
           </div>
-          <h3 className={`text-xl font-bold mb-4 ${theme.text}`}>
-            <EditableText value={data.titles[i]} onChange={(v) => {
-              const newTitles = [...data.titles];
-              newTitles[i] = v;
-              onUpdate({ ...data, titles: newTitles });
-            }} previewMode={previewMode} />
-          </h3>
-          <div className={`text-sm opacity-60 leading-relaxed ${theme.text} mb-6 flex-grow`}>
-            <EditableText value={data.descriptions[i]} onChange={(v) => {
-              const newDesc = [...data.descriptions];
-              newDesc[i] = v;
-              onUpdate({ ...data, descriptions: newDesc });
-            }} type="textarea" previewMode={previewMode} />
-          </div>
-          {data.buttonLabel && (
-            <SmartLink
-              href={data.buttonHref}
-              onNavigate={onNavigate}
-              pages={pages}
-              className="mt-auto"
-            >
-              <button className={`w-full py-3 text-xs font-bold uppercase tracking-widest rounded-xl border ${theme.border} hover:bg-white/5 transition-colors ${theme.text}`}>
-                {data.buttonLabel}
-              </button>
-            </SmartLink>
-          )}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -2202,53 +2388,59 @@ function TestimonialsSection({ data, theme, onUpdate, previewMode }) {
 }
 
 
-function PricingSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
+function PricingSection({ data, theme, aiDraft, elementId, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
-      {data.plans.map((plan, i) => (
-        <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary} flex flex-col`}>
-          <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text}`}>
-            <EditableText value={plan.name} onChange={(v) => {
-              const newPlans = [...data.plans];
-              newPlans[i].name = v;
-              onUpdate({ ...data, plans: newPlans });
-            }} previewMode={previewMode} />
-          </div>
-          <div className={`text-5xl font-black mb-8 ${theme.text}`}>
-            <EditableText value={plan.price} onChange={(v) => {
-              const newPlans = [...data.plans];
-              newPlans[i].price = v;
-              onUpdate({ ...data, plans: newPlans });
-            }} previewMode={previewMode} />
-          </div>
-          <ul className="space-y-4 mb-10 flex-grow">
-            {plan.features.map((f, idx) => (
-              <li key={idx} className={`text-sm font-bold opacity-60 flex items-center gap-3 ${theme.text}`}>
-                <Check className="w-4 h-4 text-indigo-500" />
-                <EditableText value={f} onChange={(v) => {
-                  const newPlans = [...data.plans];
-                  newPlans[i].features[idx] = v;
-                  onUpdate({ ...data, plans: newPlans });
-                }} previewMode={previewMode} />
-              </li>
-            ))}
-          </ul>
-          <SmartLink
-            href={plan.buttonHref}
-            onNavigate={onNavigate}
-            pages={pages}
-            className="w-full"
-          >
-            <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'}`}>
-              <EditableText value={plan.buttonLabel || 'Get Started'} onChange={(v) => {
+      {data.plans.map((plan, i) => {
+        const previewName = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planName-${i}` ? aiDraft.text : plan.name;
+        const previewPrice = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planPrice-${i}` ? aiDraft.text : plan.price;
+        const previewButton = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planButton-${i}` ? aiDraft.text : (plan.buttonLabel || 'Get Started');
+
+        return (
+          <div key={i} className={`p-10 rounded-3xl border-2 transition-all ${plan.highlighted ? 'border-indigo-500 scale-105 shadow-2xl z-10' : `${theme.border} opacity-80`} ${theme.secondary} flex flex-col`}>
+            <div className={`text-sm font-bold uppercase tracking-widest mb-2 ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planName-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewName} onChange={(v) => {
                 const newPlans = [...data.plans];
-                newPlans[i].buttonLabel = v;
+                newPlans[i].name = v;
                 onUpdate({ ...data, plans: newPlans });
               }} previewMode={previewMode} />
-            </button>
-          </SmartLink>
-        </div>
-      ))}
+            </div>
+            <div className={`text-5xl font-black mb-8 ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planPrice-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewPrice} onChange={(v) => {
+                const newPlans = [...data.plans];
+                newPlans[i].price = v;
+                onUpdate({ ...data, plans: newPlans });
+              }} previewMode={previewMode} />
+            </div>
+            <ul className="space-y-4 mb-10 flex-grow">
+              {plan.features.map((f, idx) => (
+                <li key={idx} className={`text-sm font-bold opacity-60 flex items-center gap-3 ${theme.text}`}>
+                  <Check className="w-4 h-4 text-indigo-500" />
+                  <EditableText value={f} onChange={(v) => {
+                    const newPlans = [...data.plans];
+                    newPlans[i].features[idx] = v;
+                    onUpdate({ ...data, plans: newPlans });
+                  }} previewMode={previewMode} />
+                </li>
+              ))}
+            </ul>
+            <SmartLink
+              href={plan.buttonHref}
+              onNavigate={onNavigate}
+              pages={pages}
+              className="w-full"
+            >
+              <button className={`w-full py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${plan.highlighted ? theme.accent : 'bg-white/5 hover:bg-white/10 text-white'} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `planButton-${i}` ? "opacity-60 italic" : ""}`}>
+                <EditableText value={previewButton} onChange={(v) => {
+                  const newPlans = [...data.plans];
+                  newPlans[i].buttonLabel = v;
+                  onUpdate({ ...data, plans: newPlans });
+                }} previewMode={previewMode} />
+              </button>
+            </SmartLink>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -2400,80 +2592,93 @@ function MenuSection({ data, theme, onUpdate, isMobileView, previewMode }) {
   );
 }
 
-function ButtonsSection({ data, theme, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
+function ButtonsSection({ data, theme, aiDraft, elementId, onUpdate, isMobileView, previewMode, onNavigate, pages }) {
   return (
     <div className={`flex gap-6 ${isMobileView ? 'flex-col items-center' : (data.align === 'center' ? 'justify-center' : data.align === 'right' ? 'justify-end' : 'justify-start')}`}>
-      {data.buttons.map((btn, i) => (
-        <SmartLink
-          key={i}
-          href={btn.href}
-          onNavigate={onNavigate}
-          pages={pages}
-        >
-          <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${theme.accent}`}>
-            <EditableText value={btn.label} onChange={(v) => {
-              const newBtns = [...data.buttons];
-              newBtns[i].label = v;
-              onUpdate({ ...data, buttons: newBtns });
-            }} previewMode={previewMode} />
-          </button>
-        </SmartLink>
-      ))}
+      {data.buttons.map((btn, i) => {
+        const previewLabel = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `button-${i}` ? aiDraft.text : btn.label;
+        return (
+          <SmartLink
+            key={i}
+            href={btn.href}
+            onNavigate={onNavigate}
+            pages={pages}
+          >
+            <button className={`px-10 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all hover:scale-105 ${theme.accent} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `button-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewLabel} onChange={(v) => {
+                const newBtns = [...data.buttons];
+                newBtns[i].label = v;
+                onUpdate({ ...data, buttons: newBtns });
+              }} previewMode={previewMode} />
+            </button>
+          </SmartLink>
+        );
+      })}
     </div>
   );
 }
 
-function FeaturesSection({ data, theme, onUpdate, isMobileView, previewMode }) {
+function FeaturesSection({ data, theme, aiDraft, elementId, onUpdate, isMobileView, previewMode }) {
   const colMap = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3' };
   return (
     <div className={`grid ${isMobileView ? 'grid-cols-1' : (colMap[data.columns] || 'grid-cols-3')} gap-16`}>
-      {data.items.map((item, i) => (
-        <div key={i} className="space-y-4">
-          <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500">
-            <span className="font-black text-xl">{i + 1}</span>
+      {data.items.map((item, i) => {
+        const previewTitle = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `featureTitle-${i}` ? aiDraft.text : item.title;
+        const previewDesc = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `featureDescription-${i}` ? aiDraft.text : item.description;
+
+        return (
+          <div key={i} className="space-y-4">
+            <div className="w-12 h-12 bg-indigo-500/10 rounded-xl flex items-center justify-center text-indigo-500">
+              <span className="font-black text-xl">{i + 1}</span>
+            </div>
+            <h3 className={`text-xl font-bold ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `featureTitle-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewTitle} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i].title = v;
+                onUpdate({ ...data, items: newItems });
+              }} previewMode={previewMode} />
+            </h3>
+            <div className={`text-sm opacity-60 leading-relaxed ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `featureDescription-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewDesc} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i].description = v;
+                onUpdate({ ...data, items: newItems });
+              }} type="textarea" previewMode={previewMode} />
+            </div>
           </div>
-          <h3 className={`text-xl font-bold ${theme.text}`}>
-            <EditableText value={item.title} onChange={(v) => {
-              const newItems = [...data.items];
-              newItems[i].title = v;
-              onUpdate({ ...data, items: newItems });
-            }} previewMode={previewMode} />
-          </h3>
-          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
-            <EditableText value={item.description} onChange={(v) => {
-              const newItems = [...data.items];
-              newItems[i].description = v;
-              onUpdate({ ...data, items: newItems });
-            }} type="textarea" previewMode={previewMode} />
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
 
-function FAQSection({ data, theme, onUpdate, previewMode }) {
+function FAQSection({ data, theme, aiDraft, elementId, onUpdate, previewMode }) {
   return (
     <div className="max-w-3xl mx-auto space-y-4">
-      {data.items.map((item, i) => (
-        <div key={i} className={`p-8 rounded-2xl border ${theme.border} ${theme.secondary}`}>
-          <h4 className={`text-lg font-bold mb-4 ${theme.text}`}>
-            <EditableText value={item.question} onChange={(v) => {
-              const newItems = [...data.items];
-              newItems[i].question = v;
-              onUpdate({ ...data, items: newItems });
-            }} previewMode={previewMode} />
-          </h4>
-          <div className={`text-sm opacity-60 leading-relaxed ${theme.text}`}>
-            <EditableText value={item.answer} onChange={(v) => {
-              const newItems = [...data.items];
-              newItems[i].answer = v;
-              onUpdate({ ...data, items: newItems });
-            }} type="textarea" previewMode={previewMode} />
+      {data.items.map((item, i) => {
+        const previewQuestion = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `question-${i}` ? aiDraft.text : item.question;
+        const previewAnswer = aiDraft && aiDraft.elementId === elementId && aiDraft.field === `answer-${i}` ? aiDraft.text : item.answer;
+
+        return (
+          <div key={i} className={`p-8 rounded-2xl border ${theme.border} ${theme.secondary}`}>
+            <h4 className={`text-lg font-bold mb-4 ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `question-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewQuestion} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i].question = v;
+                onUpdate({ ...data, items: newItems });
+              }} previewMode={previewMode} />
+            </h4>
+            <div className={`text-sm opacity-60 leading-relaxed ${theme.text} ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === `answer-${i}` ? "opacity-60 italic" : ""}`}>
+              <EditableText value={previewAnswer} onChange={(v) => {
+                const newItems = [...data.items];
+                newItems[i].answer = v;
+                onUpdate({ ...data, items: newItems });
+              }} type="textarea" previewMode={previewMode} />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -2618,29 +2823,37 @@ function StatsSection({ data, theme, onUpdate, previewMode }) {
 }
 
 
-function CTASection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
+function CTASection({ data, theme, aiDraft, elementId, onUpdate, previewMode, onNavigate, pages }) {
   const updateField = (key, value) => {
     onUpdate({ ...data, [key]: value });
   };
+
+  const previewHeading = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "heading" ? aiDraft.text : data.heading;
+  const previewSupporting = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "supportingText" ? aiDraft.text : data.supportingText;
+  const previewButton = aiDraft && aiDraft.elementId === elementId && aiDraft.field === "button" ? aiDraft.text : data.button;
 
   return (
     <div className={`max-w-5xl mx-auto ${data.py}`}>
       <div
         className={`p-12 rounded-3xl text-center border ${theme.secondary} ${theme.border}`}
       >
-        <EditableText
-          value={data.heading}
-          onChange={(v) => updateField('heading', v)}
-          className={`text-3xl font-black mb-4 ${theme.text}`}
-          previewMode={previewMode}
-        />
+        <div className={aiDraft && aiDraft.elementId === elementId && aiDraft.field === "heading" ? "opacity-60 italic" : ""}>
+          <EditableText
+            value={previewHeading}
+            onChange={(v) => updateField('heading', v)}
+            className={`text-3xl font-black mb-4 ${theme.text}`}
+            previewMode={previewMode}
+          />
+        </div>
 
-        <EditableText
-          value={data.supportingText}
-          onChange={(v) => updateField('supportingText', v)}
-          className={`text-sm opacity-70 mb-8 ${theme.text}`}
-          previewMode={previewMode}
-        />
+        <div className={aiDraft && aiDraft.elementId === elementId && aiDraft.field === "supportingText" ? "opacity-60 italic" : ""}>
+          <EditableText
+            value={previewSupporting}
+            onChange={(v) => updateField('supportingText', v)}
+            className={`text-sm opacity-70 mb-8 ${theme.text}`}
+            previewMode={previewMode}
+          />
+        </div>
 
         <SmartLink
           href={data.buttonHref}
@@ -2649,10 +2862,10 @@ function CTASection({ data, theme, onUpdate, previewMode, onNavigate, pages }) {
         >
           <button
             className={`inline-flex items-center justify-center px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${theme.accent || 'bg-indigo-600 text-white'
-              }`}
+              } ${aiDraft && aiDraft.elementId === elementId && aiDraft.field === "button" ? "opacity-60 italic" : ""}`}
           >
             <EditableText
-              value={data.button}
+              value={previewButton}
               onChange={(v) => updateField('button', v)}
               className="outline-none"
               previewMode={previewMode}
@@ -2702,7 +2915,7 @@ function ImageSection({ data, theme, onUpdate, previewMode }) {
 }
 
 function LinkSettings({ label, value, onChange, pages }) {
-  // value can be string (old URL) or object { type: 'none'|'internal'|'external', pageId?, url? }
+  // value can be string (old URL) or object {type: 'none'|'internal'|'external', pageId?, url? }
 
   // Normalize value
   const linkConfig = typeof value === 'object' && value !== null ? value : {

@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import EditorPage from './pages/EditorPage';
 import LandingPage from './pages/LandingPage';
 
+
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;

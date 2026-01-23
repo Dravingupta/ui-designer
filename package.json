@@ -1,14 +1,16 @@
 {
   "dependencies": {
     "@google/gemini-cli": "^0.22.5",
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.6",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "openai": "^6.16.0"
   },
   "name": "ui-designer",
   "version": "1.0.0",
   "description": "This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.",
   "main": "index.js",
-  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
