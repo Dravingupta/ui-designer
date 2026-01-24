@@ -92,7 +92,7 @@ const Dashboard = () => {
       {/* Navbar */}
       <nav className="border-b border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md px-8 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-cyan-600 rounded flex items-center justify-center font-bold text-white border border-cyan-500">U</div>
+          <div className="w-8 h-8 bg-cyan-600 rounded flex items-center justify-center font-bold text-white border border-cyan-500">A</div>
           <span className="text-sm font-bold tracking-widest uppercase font-mono">Automator.UI</span>
         </div>
         <div className="flex items-center gap-6">
